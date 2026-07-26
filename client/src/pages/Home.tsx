@@ -1,33 +1,256 @@
+import { useState } from "react";
+import { Link, useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { startLogin } from "@/const";
+import { trpc } from "@/lib/trpc";
+import { BrandHeader } from "@/components/BrandHeader";
+import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { Streamdown } from 'streamdown';
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { QUOTE_STATUSES, STATUS_LABELS, type QuoteStatus } from "@shared/types";
+import {
+  FilePlus2,
+  FileText,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+  Landmark,
+} from "lucide-react";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
- */
-export default function Home() {
-  // The useAuth hook provides authentication state.
-  // To implement login/logout, call logout(), or start login from an event
-  // handler: onClick={() => startLogin()} (imported from "@/const"). Never call
-  // startLogin() during render (no href={startLogin()}) — it mints a one-time
-  // nonce cookie and must run only at the moment of navigation.
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
-
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
-
+function LandingHero() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
+    <div className="flex min-h-screen flex-col bg-background">
+      <BrandHeader />
+      <main className="flex-1">
+        <section className="relative overflow-hidden border-b bg-gradient-to-br from-[#0e3a5c] via-[#1F6FB2] to-[#29ABE2] text-white">
+          <div className="container grid gap-10 py-20 md:grid-cols-[3fr_2fr] md:items-center md:py-28">
+            <div>
+              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-sky-200">
+                Internal Quoting Platform
+              </p>
+              <h1 className="max-w-xl text-4xl font-extrabold leading-tight md:text-5xl">
+                From supplier PDF to branded quotation in minutes.
+              </h1>
+              <p className="mt-5 max-w-lg text-lg text-sky-100">
+                Upload a supplier quote, let AI extract the line items, apply the correct
+                pricing model, confirm live exchange rates, and generate a finished
+                Oestergaard quotation — all in one guided workflow.
+              </p>
+              <Button
+                size="lg"
+                className="mt-8 bg-white text-[#1F6FB2] hover:bg-sky-50"
+                onClick={() => startLogin()}
+              >
+                Sign in to get started
+              </Button>
+            </div>
+            <div className="hidden space-y-4 md:block">
+              {[
+                { icon: Sparkles, title: "AI extraction", body: "Line items, prices and references pulled straight from supplier PDFs." },
+                { icon: Landmark, title: "Live FX with confirmation", body: "AUD/EUR and AUD/USD rates fetched live — never applied without your approval." },
+                { icon: TrendingUp, title: "Supplier pricing engine", body: "Collimatic, Marlin/Duravant, Foodmate, Nutri Soy and Phenova rules built in." },
+                { icon: ShieldCheck, title: "Branded output", body: "Finished PDFs matching the Oestergaard quotation template." },
+              ].map(f => (
+                <div key={f.title} className="flex items-start gap-4 rounded-lg bg-white/10 p-4 backdrop-blur">
+                  <f.icon className="mt-0.5 h-5 w-5 shrink-0 text-sky-200" />
+                  <div>
+                    <p className="font-semibold">{f.title}</p>
+                    <p className="text-sm text-sky-100">{f.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+        <section className="container py-10 text-center text-sm text-muted-foreground">
+          Access is restricted to authorised Oestergaard team members.
+        </section>
       </main>
     </div>
   );
+}
+
+function Dashboard() {
+  const [, navigate] = useLocation();
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<string>("all");
+  const [supplierName, setSupplierName] = useState<string>("all");
+
+  const { data: suppliers } = trpc.quotes.suppliers.useQuery();
+  const { data: quotes, isLoading } = trpc.quotes.list.useQuery({
+    search: search || undefined,
+    status: status === "all" ? undefined : status,
+    supplierName: supplierName === "all" ? undefined : supplierName,
+  });
+
+  const stats = {
+    total: quotes?.length ?? 0,
+    finalized: quotes?.filter(q => q.status === "finalized").length ?? 0,
+    inProgress: quotes?.filter(q => q.status !== "finalized").length ?? 0,
+  };
+
+  return (
+    <div className="flex min-h-screen flex-col bg-muted/40">
+      <BrandHeader />
+      <main className="container flex-1 py-8">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Quote Dashboard</h1>
+            <p className="text-sm text-muted-foreground">
+              All quotations generated through the AI quote workflow.
+            </p>
+          </div>
+          <Button onClick={() => navigate("/quotes/new")} size="lg">
+            <FilePlus2 className="h-4 w-4" /> New Quote
+          </Button>
+        </div>
+
+        <div className="mb-6 grid gap-4 sm:grid-cols-3">
+          {[
+            { label: "Total quotes", value: stats.total },
+            { label: "In progress", value: stats.inProgress },
+            { label: "Finalised", value: stats.finalized },
+          ].map(s => (
+            <Card key={s.label}>
+              <CardContent className="pt-5">
+                <p className="text-sm text-muted-foreground">{s.label}</p>
+                <p className="text-3xl font-bold text-primary">{s.value}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <Card>
+          <CardContent className="pt-5">
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              <div className="relative min-w-[220px] flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search customer, product, quote number..."
+                  className="pl-9"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+              </div>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  {QUOTE_STATUSES.map(s => (
+                    <SelectItem key={s} value={s}>
+                      {STATUS_LABELS[s as QuoteStatus]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={supplierName} onValueChange={setSupplierName}>
+                <SelectTrigger className="w-[190px]">
+                  <SelectValue placeholder="Supplier" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All suppliers</SelectItem>
+                  {suppliers?.map(s => (
+                    <SelectItem key={s.id} value={s.name}>
+                      {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <Skeleton key={i} className="h-12 w-full" />
+                ))}
+              </div>
+            ) : !quotes || quotes.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 py-16 text-center">
+                <FileText className="h-10 w-10 text-muted-foreground/50" />
+                <p className="font-medium">No quotes yet</p>
+                <p className="max-w-sm text-sm text-muted-foreground">
+                  Start by uploading a supplier quote PDF — the AI will extract the data and
+                  guide you through costing to a finished quotation.
+                </p>
+                <Button className="mt-2" onClick={() => navigate("/quotes/new")}>
+                  <FilePlus2 className="h-4 w-4" /> Create your first quote
+                </Button>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Quote #</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Supplier</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Total (AUD)</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {quotes.map(q => (
+                    <TableRow
+                      key={q.id}
+                      className="cursor-pointer"
+                      onClick={() => navigate(`/quotes/${q.id}`)}
+                    >
+                      <TableCell className="font-mono text-sm font-medium text-primary">
+                        {q.salesforceQuoteNumber ?? `#${q.id}`}
+                      </TableCell>
+                      <TableCell>{q.customerName ?? "—"}</TableCell>
+                      <TableCell className="max-w-[220px] truncate">{q.productCategory ?? "—"}</TableCell>
+                      <TableCell>{q.supplierName ?? "—"}</TableCell>
+                      <TableCell className="whitespace-nowrap">{q.quoteDate ?? "—"}</TableCell>
+                      <TableCell className="whitespace-nowrap font-medium">
+                        {q.grandTotalAud
+                          ? `$${Number(q.grandTotalAud).toLocaleString("en-AU", { minimumFractionDigits: 2 })}`
+                          : "—"}
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={q.status} />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      </main>
+    </div>
+  );
+}
+
+export default function Home() {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Skeleton className="h-8 w-48" />
+      </div>
+    );
+  }
+  return isAuthenticated ? <Dashboard /> : <LandingHero />;
 }

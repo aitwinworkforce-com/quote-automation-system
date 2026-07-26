@@ -1,6 +1,15 @@
-import { eq } from "drizzle-orm";
+import { and, desc, eq, like, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import {
+  exchangeRateLog,
+  InsertQuote,
+  InsertQuoteLineItem,
+  InsertUser,
+  quoteLineItems,
+  quotes,
+  suppliers,
+  users,
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +98,129 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// ---------------------------------------------------------------------------
+// Suppliers
+// ---------------------------------------------------------------------------
+
+export async function listSuppliers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(suppliers).orderBy(suppliers.name);
+}
+
+export async function getSupplierByName(name: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(suppliers).where(eq(suppliers.name, name)).limit(1);
+  return rows[0];
+}
+
+export async function getSupplierById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(suppliers).where(eq(suppliers.id, id)).limit(1);
+  return rows[0];
+}
+
+// ---------------------------------------------------------------------------
+// Quotes
+// ---------------------------------------------------------------------------
+
+export async function createQuote(data: InsertQuote) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(quotes).values(data);
+  return result[0].insertId;
+}
+
+export async function updateQuote(id: number, data: Partial<InsertQuote>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(quotes).set(data).where(eq(quotes.id, id));
+}
+
+export async function getQuoteById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(quotes).where(eq(quotes.id, id)).limit(1);
+  return rows[0];
+}
+
+export async function deleteQuote(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(quoteLineItems).where(eq(quoteLineItems.quoteId, id));
+  await db.delete(quotes).where(eq(quotes.id, id));
+}
+
+export interface QuoteFilter {
+  search?: string;
+  status?: string;
+  supplierName?: string;
+}
+
+export async function listQuotes(filter: QuoteFilter = {}) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [];
+  if (filter.search) {
+    const term = `%${filter.search}%`;
+    conditions.push(
+      or(
+        like(quotes.customerName, term),
+        like(quotes.productDescription, term),
+        like(quotes.supplierQuoteRef, term),
+        like(quotes.salesforceQuoteNumber, term),
+        like(quotes.supplierName, term),
+      ),
+    );
+  }
+  if (filter.status) {
+    conditions.push(eq(quotes.status, filter.status as "draft"));
+  }
+  if (filter.supplierName) {
+    conditions.push(eq(quotes.supplierName, filter.supplierName));
+  }
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+  return db.select().from(quotes).where(where).orderBy(desc(quotes.createdAt));
+}
+
+// ---------------------------------------------------------------------------
+// Quote line items
+// ---------------------------------------------------------------------------
+
+export async function replaceQuoteLineItems(quoteId: number, items: InsertQuoteLineItem[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(quoteLineItems).where(eq(quoteLineItems.quoteId, quoteId));
+  if (items.length > 0) {
+    await db.insert(quoteLineItems).values(items);
+  }
+}
+
+export async function getQuoteLineItems(quoteId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(quoteLineItems)
+    .where(eq(quoteLineItems.quoteId, quoteId))
+    .orderBy(quoteLineItems.position);
+}
+
+// ---------------------------------------------------------------------------
+// Exchange rate log (audit trail of fetched + confirmed rates)
+// ---------------------------------------------------------------------------
+
+export async function logExchangeRate(entry: {
+  quoteId?: number;
+  pair: string;
+  rate: string;
+  source: string;
+  confirmedBy?: number;
+  confirmedAt?: Date;
+}) {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(exchangeRateLog).values(entry);
+}

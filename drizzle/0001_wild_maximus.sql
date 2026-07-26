@@ -1,0 +1,81 @@
+CREATE TABLE `exchangeRateLog` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`quoteId` int,
+	`pair` varchar(16) NOT NULL,
+	`rate` decimal(12,6) NOT NULL,
+	`source` varchar(128) NOT NULL,
+	`fetchedAt` timestamp NOT NULL DEFAULT (now()),
+	`confirmedBy` int,
+	`confirmedAt` timestamp,
+	CONSTRAINT `exchangeRateLog_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `quoteLineItems` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`quoteId` int NOT NULL,
+	`position` int NOT NULL DEFAULT 0,
+	`description` text NOT NULL,
+	`quantity` decimal(12,3) NOT NULL DEFAULT '1',
+	`listUnitPrice` decimal(14,2),
+	`discountPct` decimal(6,3),
+	`netUnitCost` decimal(14,2),
+	`sellUnitPrice` decimal(14,2),
+	`sellTotalPrice` decimal(14,2),
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	CONSTRAINT `quoteLineItems_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `quotes` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`createdBy` int NOT NULL,
+	`status` enum('draft','extracted','costed','awaiting_sf_number','finalized') NOT NULL DEFAULT 'draft',
+	`customerName` varchar(255),
+	`customerContact` varchar(255),
+	`customerAddress` text,
+	`productCategory` varchar(255),
+	`productDescription` text,
+	`quoteDate` varchar(32),
+	`supplierId` int,
+	`supplierName` varchar(128),
+	`supplierQuoteRef` varchar(128),
+	`supplierCurrency` enum('EUR','USD','AUD') DEFAULT 'EUR',
+	`supplierTerms` text,
+	`footerPricingNote` text,
+	`exchangeRate` decimal(12,6),
+	`exchangeRateConfirmed` int NOT NULL DEFAULT 0,
+	`exchangeRateSource` varchar(128),
+	`marginPct` decimal(6,3),
+	`distributionDiscountPct` decimal(6,3),
+	`freightCostAud` decimal(14,2),
+	`installationCostAud` decimal(14,2),
+	`otherLocalCostAud` decimal(14,2),
+	`totalCostForeign` decimal(14,2),
+	`totalSellForeign` decimal(14,2),
+	`totalSellAud` decimal(14,2),
+	`grandTotalAud` decimal(14,2),
+	`paymentTerms` text,
+	`deliveryTerms` text,
+	`validityDays` int DEFAULT 30,
+	`warrantyTerms` text,
+	`salesforceQuoteNumber` varchar(64),
+	`supplierPdfKey` varchar(512),
+	`supplierPdfUrl` varchar(1024),
+	`supplierPdfName` varchar(255),
+	`generatedPdfKey` varchar(512),
+	`generatedPdfUrl` varchar(1024),
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `quotes_id` PRIMARY KEY(`id`)
+);
+--> statement-breakpoint
+CREATE TABLE `suppliers` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`name` varchar(128) NOT NULL,
+	`pricingModel` enum('net_price','list_minus_distribution','as_is','list_minus_stated_discount','footer_based') NOT NULL,
+	`defaultDiscountPct` decimal(6,3),
+	`notes` text,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `suppliers_id` PRIMARY KEY(`id`),
+	CONSTRAINT `suppliers_name_unique` UNIQUE(`name`)
+);
