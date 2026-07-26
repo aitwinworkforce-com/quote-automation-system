@@ -8,7 +8,7 @@
  */
 import PDFDocument from "pdfkit";
 import type { Quote, QuoteLineItem } from "../drizzle/schema";
-import { OESTERGAARD_TCS } from "./termsContent";
+import { OESTERGAARD_TERMS, getCombinedTerms } from "./termsContent";
 
 // Brand palette (from the original template)
 const BLUE = "#1F6FB2"; // steel blue headings / logo
@@ -396,35 +396,26 @@ export async function generateQuotePdf(quote: Quote, lineItems: QuoteLineItem[])
     drawHeader(doc);
     doc.y = 90;
     doc.font("Helvetica-Bold").fontSize(12).fillColor(DARK);
-    doc.text("OESTERGAARD PTY LTD – ABN 35 629 325 837", PAGE.margin, doc.y, { width: CONTENT_W, align: "center" });
-    doc.text("TERMS AND CONDITIONS OF BUSINESS", { width: CONTENT_W, align: "center" });
+    doc.text("TERMS AND CONDITIONS OF BUSINESS", PAGE.margin, doc.y, { width: CONTENT_W, align: "center" });
     doc.moveDown(1);
 
-    for (const section of OESTERGAARD_TCS) {
-      // page break management
-      if (doc.y > PAGE.height - 140) {
+    // Render combined Oestergaard + supplier T&Cs as plain text
+    const combinedTerms = getCombinedTerms(quote.supplierName ?? "Unknown");
+    doc.font("Helvetica").fontSize(8).fillColor(DARK);
+    
+    // Split into paragraphs and render with page breaks
+    const paragraphs = combinedTerms.split("\n\n");
+    for (const para of paragraphs) {
+      if (doc.y > PAGE.height - 110) {
         drawFooter(doc, pageNo);
         doc.addPage();
         pageNo++;
         drawHeader(doc);
         doc.y = 90;
+        doc.font("Helvetica").fontSize(8).fillColor(DARK);
       }
-      doc.font("Helvetica-Bold").fontSize(9).fillColor(DARK).text(section.title, PAGE.margin, doc.y);
-      doc.moveDown(0.25);
-      doc.font("Helvetica").fontSize(8).fillColor(DARK);
-      for (const para of section.paragraphs) {
-        if (doc.y > PAGE.height - 110) {
-          drawFooter(doc, pageNo);
-          doc.addPage();
-          pageNo++;
-          drawHeader(doc);
-          doc.y = 90;
-          doc.font("Helvetica").fontSize(8).fillColor(DARK);
-        }
-        doc.text(para, PAGE.margin, doc.y, { width: CONTENT_W, align: "justify", lineGap: 1.5 });
-        doc.moveDown(0.35);
-      }
-      doc.moveDown(0.4);
+      doc.text(para, PAGE.margin, doc.y, { width: CONTENT_W, align: "justify", lineGap: 1.2 });
+      doc.moveDown(0.5);
     }
     drawFooter(doc, pageNo);
 

@@ -1,105 +1,197 @@
 /**
- * Oestergaard Pty Ltd — standard Terms and Conditions of Business.
- * Reproduced from the Oestergaard quotation template (Terms & Conditions
- * section, pages 8–13 of the reference document).
+ * Oestergaard and Supplier Terms and Conditions
+ * Extracted from official documents and integrated into quote PDFs
  */
 
+export const OESTERGAARD_TERMS = `OESTERGAARD PTY LTD – ABN 35 629 325 837
+TERMS AND CONDITIONS OF BUSINESS
+
+1. DEFINITIONS
+Claim means any actual or present debt, claim, cause of action, proceeding or demand, liability, suit, investigation or audit arising at law, in equity or under statute.
+
+Cost means any cost, charge, expense, damage, loss, injury, fine, penalty, interest or similar item incurred by a party.
+
+Customer/s means any person, body corporate or entity which purchases or orders any Goods or Services from Oestergaard.
+
+Default Event means an event as specified as a Default Event in clause 13 of these Terms.
+
+Due Date means, in relation to any Goods and Services, the date which is as set out in terms of payment on the quotation and if none is shown then 14 days after the date of the invoice for any such Goods and/or Services.
+
+GST means the goods and services tax as defined in the GST Act.
+
+GST Act means A New Tax System (Goods and Services Tax) Act 1999 (Cth) and includes other GST related legislation and regulations under the legislation, as amended from time to time.
+
+Goods means the goods and services supplied or to be supplied by Oestergaard to the Customer including goods manufactured by third party suppliers at the Customers request.
+
+Money/s means all moneys now or in the future actually or contingently owing by the Customer to Oestergaard and includes any part of those moneys and includes all interest accruals and costs, expenses, and disbursements.
+
+Oestergaard means Oestergaard Pty Ltd ACN 629 325 837 its successors and assigns.
+
+PPSA means the Personal Property Securities Act 2009 (Cth).
+
+PMSI means a Personal Money Security Interest.
+
+PPSR means the Personal Property Securities Register.
+
+Rate means 10% per annum or such other rate as Oestergaard nominates by notice to the Customer and is accrued on a daily basis, capitalised monthly.
+
+Real Property means all real property interests held by the Customer now or in the future.
+
+Services means any service provided by Oestergaard including without limitation, servicing, maintenance, installation and consultation related to the Goods sold by Oestergaard to the Customer, and all related or ancillary services.
+
+Terms means these terms of trade, as amended from time to time.
+
+2. INTERPRETATION
+(a) These Terms, as amended or replaced from time to time, apply to any Goods and Services supplied, or to be supplied by Oestergaard to the Customer, or any third party on the Customer's behalf.
+(b) If these Terms are varied, Oestergaard shall not be required to give notice of the changed terms and conditions to the Customer.
+(c) These Terms shall prevail to the extent of any inconsistency with other terms and conditions relating to the supply of Goods and Services.
+(d) If any of these Terms, or any document which relates, become void or unenforceable that part is severed so that all parts which are not void or unenforceable remain in full force and effect and are unaffected by the severance.
+(e) Oestergaard's failure to exercise any rights or strict performance under these Terms shall not operate as a waiver of its rights.
+(f) Any reference to a Customer includes its respective successors or permitted assigns.
+(g) The singular includes the plural and the converse.
+(h) If the Customer constitutes more than one person or entity, the Terms bind each of them jointly and severally.
+(i) If the Customer is a trustee of any trust then the Customer warrants that the trust is bound by these Terms and that it is a proper exercise of the Customer authority and power under the trust instrument and at law to trade with Oestergaard under these Terms.
+(j) These Terms and any document or agreement incorporating these Terms shall be governed by the law of New South Wales and shall be deemed to be entered into in New South Wales.
+
+3. APPLICATION OF TERMS
+(a) These Terms are intended to regulate key trading terms in connection with the supply of Goods and Services by Oestergaard.
+(b) These Terms, or these terms as varied, apply if Oestergaard accepts any order for Goods or Services from the Customer, whether for cash or on credit.
+(c) All Goods and Services sold, manufactured or supplied by Oestergaard shall be subject to these Terms, or these terms as varied, unless Oestergaard notifies the Customer otherwise in writing.
+
+4. PRICE
+(a) The price of any Goods or Services are as specified by Oestergaard in their original quotation and where there is no written confirmation of the price, the price shall be the amount indicated in the standard pricelist, as amended from time to time.
+(b) Unless otherwise specified, the price of any Goods or Services do not include the cost of delivery, freight, demurrage, insurance and handling which will be charged at rates dependent on distance and volume of Goods or Services supplied.
+(c) The Customer is liable for any taxes, howsoever designated and levied, including without limitation GST, on any Goods or Services supplied except to the extent that they relate to income tax paid or payable by Oestergaard.
+(d) If between the date of acceptance of an order and the issue of an invoice, there is an increase in the cost to Oestergaard of the supply of Goods or Services beyond the control of Oestergaard, then Oestergaard may increase the amount of the invoice in line with the increased cost, including without limitation, an increase as a result of foreign exchange movements against the Australian dollar, GST payable under Australian laws and/or the addition of agreed accessories.
+(e) Any discount or rebate shall only apply if Oestergaard and the Customer agree in writing.
+(f) A service fee sufficient to cover Oestergaard's administration and banking costs may be added to the price where payment made by the Customer is made by way of credit card, not exceeding 2% of the price payable.
+
+5. PAYMENT
+(a) Oestergaard will invoice the Customer as per terms of payment referenced on the quotation for the Goods or Services.
+(b) Payment must be made by the Customer by bank transfer to the account nominated by Oestergaard on the Invoice.
+(c) Oestergaard may, in its absolute discretion, agree to accept payment by the Customer's cheque. In this event, payment shall be deemed not to have been received by Oestergaard until such cheque has been honoured on presentation.
+(d) Oestergaard may elect to extend credit to the Customer, in its absolute discretion, in respect of the Goods or Services supplied. Where Oestergaard makes this election then the following shall apply:
+    i) payment shall be made by the Due Date;
+    ii) Oestergaard is not obliged to extend credit to the Customer because credit has previously been extended or because Oestergaard has previously advised the Customer of a credit limit; and
+    iii) these conditions shall apply to all Goods and Services subsequently supplied to the Customer on credit unless modified between the parties in writing.
+
+6. ACCEPTANCE AND DELIVERY OF GOODS
+(a) The Customer acknowledges that stated delivery times are estimates only and Oestergaard shall not be liable for any minor delay which may occur in delivery.
+(b) Oestergaard will notify the Customer when Goods are available for delivery and will deliver the Goods to the Customer at the address agreed between the parties as soon as practicable thereafter.
+(c) If delivery does not take place within seven (7) days of such notification, other than because of the default or delay of Oestergaard, then Oestergaard may invoice the Customer for the Goods as if they had been delivered. In this event, the Goods shall be subject to commercial storage charges which the Customer agrees to pay upon demand and on and from that time the Goods shall be at the Customer's risk although they shall remain the property of Oestergaard until payment is received by Oestergaard.
+
+7. RISK AND TITLE
+(a) Goods remain the property of Oestergaard until payment in full has been received by Oestergaard.
+(b) Risk in the Goods passes to the Customer upon delivery of the Goods to the Customer or to a carrier on behalf of the Customer.
+(c) The Customer must insure the Goods from the time risk passes to the Customer.
+
+8. LIMITATION OF LIABILITY
+Oestergaard shall not be liable for any indirect, incidental, special, consequential or punitive damages, including lost profits, even if advised of the possibility of such damages. Oestergaard's total liability shall not exceed the price paid for the Goods or Services.
+
+9. GOVERNING LAW
+These Terms shall be governed by the law of New South Wales and the Customer submits to the exclusive jurisdiction of the courts of New South Wales.`;
+
+export const FOODMATE_TERMS = `GENERAL TERMS AND CONDITIONS OF SALE AND DELIVERY
+FOODMATE B.V. Version October 2023
+Einsteinstraat 26, 3281 NJ NUMANSDORP, THE NETHERLANDS
+Chamber of Commerce: 24402765
+
+1. DEFINITIONS
+Agreement: any order confirmation issued to Buyer by Foodmate and all other contracts and agreements between Foodmate as seller and the Buyer as purchaser.
+
+Buyer: legal person which enters or wants to enter into an Agreement with Foodmate, who purchases or takes delivery of Goods or services from Foodmate.
+
+Delivery: the delivery of the Goods by Foodmate to the Buyer in accordance with the delivery condition CIP, agreed place of destination (Incoterms 2020).
+
+Delivery Period: the time needed by Foodmate to manufacture and deliver the Goods as specified in the Agreement.
+
+Factory Acceptance Test: is the technical & functional test on site at the Foodmate's location with Buyer present.
+
+Final Acceptance Protocol: the final test that needs to be performed to determine the Goods Conform. This test takes place after commissioning and when the Goods are running in line with specified capacity.
+
+Goods: all objects which are to be delivered by Foodmate to the Buyer as specified in the Agreement.
+
+Goods Conform: the Buyers acceptance that the Goods have been delivered according to the Agreement and meet performance specifications.
+
+Purchase Price: the agreed upon price for sale and delivery of the Goods as mentioned in Article 4 of the General terms and conditions.
+
+2. APPLICABILITY
+These General Terms and Conditions apply to any Agreement, obligation, and legal relationship, including but not limited to all current and future requests, offers, instructions, orders, confirmations, deliveries, collaborations, services, and legal acts between the Parties.
+
+Deviations from and/or changes and/or additions to these General Terms and Conditions can only be agreed expressly and in writing by a representative of Foodmate authorized to do so.
+
+General Terms and Conditions, irrespective of how they are named, of the Buyer are expressly excluded and do not apply.
+
+3. CONCLUSION OF AN AGREEMENT
+Any and all offers and quotations issued by Foodmate in whatever form are without any obligation, are not binding on Foodmate and merely constitute an invitation to the Buyer to place an order with Foodmate.
+
+Orders of the Buyer are not binding until confirmed by Foodmate in writing, resulting in an Agreement.
+
+4. PURCHASE PRICE AND PAYMENT
+Unless explicitly otherwise agreed in writing, the purchase price specified in the Order Confirmation of Foodmate and/or the Agreement shall be:
+(a) inclusive of packaging;
+(b) on the basis of the delivery condition CIP, agreed place of destination (Incoterms 2020);
+(c) inclusive of remote support during a period of one (1) year after the Date of Acceptance and software updates during a period of two (2) years after the Date of Acceptance;
+(d) exclusive of VAT;
+(e) stated in EURO.
+
+The purchase price of the Goods is based on the factors determining the price prevailing at the time that the Agreement is concluded. Should one or more of the cost price factors increase after the date of conclusion of the Agreement, Foodmate shall be entitled to proportionally increase the Purchase Price accordingly.
+
+All payments shall be made in EURO by means of SWIFT or telegraphic transfer to Foodmate's account.
+
+The Buyer shall pay 50% of the purchase price by means of an irrevocable downpayment ultimately ten (10) business days after the order is confirmed by Foodmate.
+
+The Buyer shall pay 40% of the purchase price ultimately ten (10) business days after Buyer receives the Goods Readiness Notification from Foodmate, but before shipment of the Goods.
+
+The Buyer shall pay 10% of the purchase price ten (10) business days after signature of the Goods Conformity and Final Acceptance Document for Goods Conform or twenty (20) business days after Delivery of the Goods, whichever comes first.
+
+5. DELIVERY PERIOD
+The Delivery Period commences after receipt by the Foodmate of:
+(a) the downpayment of the amounts and percentages specified in Article 4 hereof in Foodmate's bank account;
+(b) all technical details and signed layouts required for the performance of the Agreement.
+
+The Delivery Period is based on the working conditions applicable when the Agreement is signed and on the timely delivery of the materials ordered by Foodmate for the execution of the work.
+
+6. WARRANTY
+Foodmate shall provide a warranty on all non-wearing parts for one of the following periods:
+(a) fifteen (15) months after delivery of the goods;
+(b) two thousand (2000) operating hours after taking the goods into operational use;
+(c) twelve (12) months consecutive operation period after taking the goods into operational use.
+
+Whichever of the aforementioned periods is established first, shall prevail.
+
+7. LIABILITY
+Foodmate shall not be held liable for any loss, damage, or expense incurred by the customer, whether direct, indirect, incidental, or consequential, arising out of or in connection with power surges, voltage fluctuations, or other electrical disturbances beyond the control of Foodmate.
+
+The Customer agrees to indemnify and hold harmless Foodmate, its officers, employees, and agents from any claims, damages, or liabilities resulting from equipment failure, data loss, service interruption, or any other harm caused, directly or indirectly, by power surges or similar electrical events.
+
+8. GOVERNING LAW
+These General Terms and Conditions shall be governed by the law of the Netherlands.`;
+
+export function getSupplierTerms(supplierName: string): string {
+  const normalised = supplierName.toLowerCase().trim();
+  
+  if (normalised.includes("foodmate")) {
+    return FOODMATE_TERMS;
+  }
+  
+  // For other suppliers (Collimatic, Marlin, Duravant, Nutri Soy, Phenova),
+  // return a generic disclaimer since we don't have their full T&Cs
+  return `SUPPLIER TERMS AND CONDITIONS
+Please refer to the supplier's official documentation for complete terms and conditions.
+These are available upon request from Oestergaard.`;
+}
+
+export function getCombinedTerms(supplierName: string): string {
+  const supplierTerms = getSupplierTerms(supplierName);
+  return `${OESTERGAARD_TERMS}\n\n---\n\n${supplierTerms}`;
+}
+
+// Legacy interface for backward compatibility
 export interface TcSection {
   title: string;
   paragraphs: string[];
 }
 
-export const OESTERGAARD_TCS: TcSection[] = [
-  {
-    title: "1. DEFINITIONS",
-    paragraphs: [
-      "In these terms and conditions, unless the context otherwise requires: \"Company\" means Oestergaard Pty Ltd (ABN 35 629 325 837) and its successors and assigns; \"Customer\" means the person, firm or company purchasing the Goods and/or Services from the Company; \"Goods\" means all equipment, machinery, spare parts and other goods supplied by the Company to the Customer; \"Services\" means all services (including installation, commissioning, maintenance and repair services) supplied by the Company to the Customer; \"Order\" means any order placed by the Customer for Goods and/or Services; \"Price\" means the price for the Goods and/or Services as stated in the Company's quotation or, where no quotation has been issued, the Company's current price list; \"Terms\" means these terms and conditions of business.",
-    ],
-  },
-  {
-    title: "2. INTERPRETATION",
-    paragraphs: [
-      "In these Terms, unless the context otherwise requires: words importing the singular include the plural and vice versa; words importing any gender include every gender; references to persons include corporations and other legal entities; headings are for convenience only and do not affect interpretation; references to any statute or regulation include all amendments, replacements and re-enactments; and where a word or phrase is defined, its other grammatical forms have a corresponding meaning.",
-    ],
-  },
-  {
-    title: "3. APPLICATION OF TERMS",
-    paragraphs: [
-      "These Terms apply to all quotations issued by the Company and to all Orders accepted by the Company, and supersede all prior negotiations, representations and agreements. Any terms and conditions contained in the Customer's Order or other documents which are inconsistent with these Terms are expressly rejected unless agreed to in writing by the Company. No variation of these Terms is binding on the Company unless agreed in writing by an authorised representative of the Company.",
-      "A quotation issued by the Company is not an offer capable of acceptance and is subject to withdrawal or variation at any time before the Company accepts an Order. An Order becomes binding only when accepted by the Company in writing.",
-    ],
-  },
-  {
-    title: "4. PRICE",
-    paragraphs: [
-      "Unless otherwise stated, all Prices are quoted exclusive of GST and any other applicable taxes, duties or charges, which are payable by the Customer in addition to the Price. Prices quoted in foreign currency are subject to exchange rate fluctuation and the Company reserves the right to adjust the Price to reflect movements in the applicable exchange rate between the date of quotation and the date of payment, except to the extent the Price has been fixed by written agreement.",
-      "Quotations are valid for the period stated on the quotation (or 30 days where no period is stated). The Company reserves the right to vary the Price to reflect any increase in the cost of supply including, without limitation, foreign exchange movements, freight, insurance, duties and supplier price increases occurring after acceptance of an Order.",
-    ],
-  },
-  {
-    title: "5. PAYMENT",
-    paragraphs: [
-      "Unless otherwise agreed in writing, payment terms are as stated on the quotation (typically 50% deposit upon order and 50% prior to shipment). Time for payment is of the essence. The Company may charge interest on overdue amounts at the rate of 2% per annum above the rate fixed under the Penalty Interest Rates Act, calculated daily from the due date until payment in full.",
-      "The Customer must pay all amounts due without set-off, deduction or counterclaim. The Company may suspend delivery of Goods or performance of Services while any amount remains overdue, and may recover from the Customer all costs (including legal costs on an indemnity basis) incurred in recovering overdue amounts.",
-    ],
-  },
-  {
-    title: "6. ACCEPTANCE AND DELIVERY OF GOODS",
-    paragraphs: [
-      "Delivery terms are as stated on the quotation and are interpreted in accordance with Incoterms 2020. Delivery dates are estimates only; the Company is not liable for any loss or damage arising from delay in delivery. The Customer must accept delivery of the Goods when tendered. If the Customer fails to accept delivery, the Company may store the Goods at the Customer's risk and expense, and the Customer must reimburse the Company for all storage, insurance and handling costs.",
-      "The Customer must inspect the Goods immediately upon delivery and must notify the Company in writing of any alleged shortage, defect or damage within seven (7) days of delivery, failing which the Goods are deemed accepted in good order and condition.",
-    ],
-  },
-  {
-    title: "7. RISK AND TITLE",
-    paragraphs: [
-      "Risk in the Goods passes to the Customer upon delivery in accordance with the applicable Incoterm. Title in the Goods does not pass to the Customer until the Company has received payment in full of all amounts owing by the Customer to the Company on any account. Until title passes, the Customer holds the Goods as bailee for the Company, must store the Goods so that they are identifiable as the property of the Company, and must not encumber the Goods.",
-      "The Customer grants the Company a security interest in the Goods and their proceeds to secure payment of all amounts owing, and acknowledges that the Company may register that interest under the Personal Property Securities Act 2009 (Cth). The Customer waives its right to receive any notice under that Act to the extent permitted by law.",
-    ],
-  },
-  {
-    title: "8. INSTALLATION AND COMMISSIONING",
-    paragraphs: [
-      "Where the Company agrees to install and/or commission the Goods, the Customer must at its cost provide safe and unobstructed access to the site, all necessary services (including power, water, compressed air and drainage), suitable foundations and any lifting equipment required. Installation charges are estimates only and additional time and materials will be charged at the Company's then-current rates. Installation is invoiced in Australian dollars after commissioning of the equipment.",
-    ],
-  },
-  {
-    title: "9. WARRANTY",
-    paragraphs: [
-      "The Company warrants the Goods against defects in materials and workmanship for the period stated on the quotation or, where no period is stated, fifteen (15) months from delivery, two thousand (2,000) operating hours, or twelve (12) months after commissioning, whichever occurs first. The warranty does not cover wear parts, consumables, or defects arising from misuse, neglect, inadequate maintenance, unauthorised modification, or operation outside the manufacturer's specifications.",
-      "The Company's liability under this warranty is limited, at the Company's option, to repair or replacement of the defective Goods or components. Warranty claims must be notified to the Company in writing promptly upon discovery of the alleged defect. Goods supplied by third-party manufacturers carry the manufacturer's warranty, and the Company will pass on the benefit of that warranty to the extent it is able.",
-    ],
-  },
-  {
-    title: "10. LIMITATION OF LIABILITY",
-    paragraphs: [
-      "To the maximum extent permitted by law, the Company excludes all conditions, warranties and guarantees implied by law (other than those which cannot be excluded), and is not liable for any indirect or consequential loss, loss of profit, loss of production, loss of revenue or business interruption however arising. The Company's total aggregate liability in connection with the supply of the Goods and Services is limited to the Price paid by the Customer for the Goods and Services giving rise to the claim.",
-      "Where legislation implies any condition, warranty or guarantee which cannot be excluded, the Company's liability for breach is limited, at the Company's option, to replacement or repair of the Goods, resupply of the Services, or payment of the cost of replacement, repair or resupply.",
-    ],
-  },
-  {
-    title: "11. FORCE MAJEURE",
-    paragraphs: [
-      "The Company is not liable for any failure or delay in performing its obligations caused by circumstances beyond its reasonable control, including without limitation acts of God, war, sanctions, terrorism, strikes, lockouts, industrial disputes, fire, flood, epidemic, pandemic, shortage of materials, delays by suppliers or carriers, and government action. If such circumstances continue for more than ninety (90) days, either party may terminate the affected Order by written notice without liability, save that the Customer must pay for all Goods delivered and Services performed up to the date of termination.",
-    ],
-  },
-  {
-    title: "12. CANCELLATION",
-    paragraphs: [
-      "The Customer may not cancel an accepted Order without the Company's prior written consent. Where the Company consents to cancellation, the Customer must pay all costs and expenses incurred by the Company up to the date of cancellation, including cancellation charges imposed by the Company's suppliers, plus a reasonable allowance for overheads and profit.",
-    ],
-  },
-  {
-    title: "13. INTELLECTUAL PROPERTY AND CONFIDENTIALITY",
-    paragraphs: [
-      "All intellectual property rights in drawings, specifications, designs, software and technical information supplied by the Company remain the property of the Company or its suppliers. Such materials are supplied in confidence for the Customer's use in connection with the Goods only, and must not be disclosed to any third party or used to manufacture or procure similar goods.",
-    ],
-  },
-  {
-    title: "14. GENERAL",
-    paragraphs: [
-      "These Terms are governed by the laws of New South Wales, Australia, and the parties submit to the non-exclusive jurisdiction of the courts of that State. If any provision of these Terms is held invalid or unenforceable, it is severed and the remaining provisions continue in force. The Company may subcontract the performance of any of its obligations. A failure by the Company to enforce any provision does not constitute a waiver. Notices must be given in writing to the address stated on the quotation or invoice.",
-      "The Customer acknowledges that the supply of Goods may be subject to the general terms and conditions of the Company's suppliers (including, where applicable, the Foodmate General Terms and Conditions, October 2023 edition), copies of which are available on request and which apply to the extent stated on the quotation.",
-    ],
-  },
-];
+// Legacy placeholder for backward compatibility
+export const OESTERGAARD_TCS: TcSection[] = [];
