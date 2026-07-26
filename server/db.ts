@@ -2,11 +2,14 @@ import { and, desc, eq, like, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   exchangeRateLog,
+  InsertQuoteEmailLogEntry,
   InsertQuote,
   InsertQuoteLineItem,
   InsertUser,
+  quoteEmailLog,
   quoteLineItems,
   quotes,
+  InsertSupplier,
   suppliers,
   users,
 } from "../drizzle/schema";
@@ -122,6 +125,19 @@ export async function getSupplierById(id: number) {
   return rows[0];
 }
 
+export async function updateSupplier(id: number, data: Partial<InsertSupplier>) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(suppliers).set(data).where(eq(suppliers.id, id));
+}
+
+export async function createSupplier(data: InsertSupplier) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(suppliers).values(data);
+  return result[0].insertId;
+}
+
 // ---------------------------------------------------------------------------
 // Quotes
 // ---------------------------------------------------------------------------
@@ -151,6 +167,49 @@ export async function deleteQuote(id: number) {
   if (!db) throw new Error("Database not available");
   await db.delete(quoteLineItems).where(eq(quoteLineItems.quoteId, id));
   await db.delete(quotes).where(eq(quotes.id, id));
+}
+
+// ---------------------------------------------------------------------------
+// Quote revisions
+// ---------------------------------------------------------------------------
+
+/** All revisions in a quote family (same rootQuoteId), oldest first. */
+export async function getQuoteRevisions(rootQuoteId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(quotes)
+    .where(eq(quotes.rootQuoteId, rootQuoteId))
+    .orderBy(quotes.id);
+}
+
+/** Mark every revision in a family as not-latest (before inserting a new one). */
+export async function clearLatestRevisionFlag(rootQuoteId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(quotes).set({ isLatestRevision: 0 }).where(eq(quotes.rootQuoteId, rootQuoteId));
+}
+
+// ---------------------------------------------------------------------------
+// Quote email log
+// ---------------------------------------------------------------------------
+
+export async function logQuoteEmail(entry: InsertQuoteEmailLogEntry) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(quoteEmailLog).values(entry);
+  return result[0].insertId;
+}
+
+export async function getQuoteEmailLog(quoteId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(quoteEmailLog)
+    .where(eq(quoteEmailLog.quoteId, quoteId))
+    .orderBy(desc(quoteEmailLog.sentAt));
 }
 
 export interface QuoteFilter {

@@ -6,11 +6,14 @@ import { startLogin } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { BrandHeader } from "@/components/BrandHeader";
 import { StatusBadge } from "@/components/StatusBadge";
+import { SendQuoteDialog } from "@/components/SendQuoteDialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -18,10 +21,13 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  ArrowLeft, Download, FileText, Loader2, RefreshCw, Trash2, TriangleAlert,
+  ArrowLeft, Download, FileText, GitBranch, Loader2, RefreshCw, Trash2, TriangleAlert,
 } from "lucide-react";
 
 const fmt = (v: string | number | null | undefined, prefix = "") => {
@@ -38,14 +44,21 @@ export default function QuoteDetail() {
   const quoteId = Number(params?.id);
 
   const [sfNumber, setSfNumber] = useState("");
+  const [revisionNote, setRevisionNote] = useState("");
+  const [revisionDialogOpen, setRevisionDialogOpen] = useState(false);
 
   const { data, isLoading, refetch } = trpc.quotes.get.useQuery(
+    { quoteId },
+    { enabled: isAuthenticated && Number.isFinite(quoteId) },
+  );
+  const { data: revisionChain } = trpc.revisions.chain.useQuery(
     { quoteId },
     { enabled: isAuthenticated && Number.isFinite(quoteId) },
   );
   const setSf = trpc.quotes.setSalesforceNumber.useMutation();
   const generatePdf = trpc.pdf.generateQuote.useMutation();
   const deleteQuote = trpc.quotes.delete.useMutation();
+  const createRevision = trpc.revisions.create.useMutation();
   const utils = trpc.useUtils();
 
   if (loading || (isAuthenticated && isLoading)) {
@@ -86,6 +99,23 @@ export default function QuoteDetail() {
   const needsSf = !quote.salesforceQuoteNumber;
   const canGenerate = !!quote.exchangeRateConfirmed && !!quote.grandTotalAud;
 
+  const handleCreateRevision = async () => {
+    try {
+      const res = await createRevision.mutateAsync({
+        quoteId,
+        note: revisionNote.trim() || undefined,
+      });
+      setRevisionDialogOpen(false);
+      setRevisionNote("");
+      utils.quotes.list.invalidate();
+      utils.revisions.chain.invalidate();
+      toast.success(`Revision ${res.revisionLabel} created`);
+      navigate(`/quotes/${res.newQuoteId}`);
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed to create revision");
+    }
+  };
+
   const handleSetSfAndGenerate = async () => {
     try {
       if (needsSf) {
@@ -121,6 +151,9 @@ export default function QuoteDetail() {
               <h1 className="text-2xl font-bold tracking-tight">
                 {quote.salesforceQuoteNumber ? `Quotation ${quote.salesforceQuoteNumber}` : `Quote draft #${quote.id}`}
               </h1>
+              {quote.revisionLabel && quote.revisionLabel !== "A" && (
+                <Badge variant="secondary" className="font-semibold">Rev {quote.revisionLabel}</Badge>
+              )}
               <StatusBadge status={quote.status} />
             </div>
             <p className="text-sm text-muted-foreground">
@@ -128,6 +161,38 @@ export default function QuoteDetail() {
             </p>
           </div>
           <div className="flex gap-2">
+            <Dialog open={revisionDialogOpen} onOpenChange={setRevisionDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <GitBranch className="h-4 w-4" /> New revision
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Create revision {quote.revisionLabel ? `(next after Rev ${quote.revisionLabel})` : ""}</DialogTitle>
+                  <DialogDescription>
+                    Clones this quote's details, costing and line items into a new linked draft.
+                    You'll enter a new Salesforce number and regenerate the PDF for the revision.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-2 py-2">
+                  <Label>Reason for revision (optional)</Label>
+                  <Textarea
+                    rows={3}
+                    placeholder="e.g. Customer requested updated freight allowance"
+                    value={revisionNote}
+                    onChange={e => setRevisionNote(e.target.value)}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setRevisionDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={() => void handleCreateRevision()} disabled={createRevision.isPending}>
+                    {createRevision.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                    Create revision
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
             {quote.supplierPdfUrl && (
               <Button variant="outline" asChild>
                 <a href={quote.supplierPdfUrl} target="_blank" rel="noreferrer">
@@ -142,6 +207,7 @@ export default function QuoteDetail() {
                 </a>
               </Button>
             )}
+            {quote.status === "finalized" && <SendQuoteDialog quote={quote} />}
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="outline" size="icon" className="text-destructive">
@@ -175,6 +241,56 @@ export default function QuoteDetail() {
         </div>
 
         <div className="grid gap-6">
+          {/* Revision history */}
+          {revisionChain && revisionChain.length > 1 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <GitBranch className="h-4 w-4" /> Revision history
+                </CardTitle>
+                <CardDescription>All iterations of this quotation, linked for a complete audit trail.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Revision</TableHead>
+                      <TableHead>Salesforce #</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Grand total (AUD)</TableHead>
+                      <TableHead>Note</TableHead>
+                      <TableHead>Created</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {revisionChain.map(rev => (
+                      <TableRow
+                        key={rev.id}
+                        className={rev.id === quote.id ? "bg-primary/5" : "cursor-pointer hover:bg-muted/50"}
+                        onClick={() => rev.id !== quote.id && navigate(`/quotes/${rev.id}`)}
+                      >
+                        <TableCell className="font-semibold">
+                          Rev {rev.revisionLabel}
+                          {rev.id === quote.id && <span className="ml-2 text-xs text-muted-foreground">(viewing)</span>}
+                          {!!rev.isLatestRevision && (
+                            <Badge variant="secondary" className="ml-2 text-[10px]">Latest</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>{rev.salesforceQuoteNumber ?? "—"}</TableCell>
+                        <TableCell><StatusBadge status={rev.status} /></TableCell>
+                        <TableCell>{fmt(rev.grandTotalAud, "$")}</TableCell>
+                        <TableCell className="max-w-52 truncate text-sm text-muted-foreground">{rev.revisionNote ?? "—"}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {rev.createdAt ? new Date(rev.createdAt).toLocaleDateString("en-AU") : "—"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Details */}
           <Card>
             <CardHeader>

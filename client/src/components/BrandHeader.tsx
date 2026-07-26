@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
 
 export function BrandHeader() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -21,6 +21,12 @@ export function BrandHeader() {
         </Link>
         {isAuthenticated && (
           <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/settings/suppliers">
+                <Settings className="h-4 w-4" />
+                <span className="hidden sm:inline">Suppliers</span>
+              </Link>
+            </Button>
             <span className="hidden text-sm text-muted-foreground md:inline">{user?.name}</span>
             <Button variant="ghost" size="sm" onClick={() => logout()}>
               <LogOut className="h-4 w-4" />
@@ -32,4 +38,3 @@ export function BrandHeader() {
     </header>
   );
 }
-

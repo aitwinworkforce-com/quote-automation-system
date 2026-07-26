@@ -52,6 +52,8 @@ export const quotesRouter = router({
         supplierPdfName: input.fileName,
         quoteDate: new Date().toLocaleDateString("en-AU"),
       });
+      // A brand-new quote is the root of its own revision family (Rev A)
+      await db.updateQuote(quoteId, { rootQuoteId: quoteId });
 
       // AI extraction — send the PDF bytes inline as a base64 data URL
       // (storage URLs are relative proxy paths the LLM backend cannot fetch)
@@ -71,6 +73,10 @@ export const quotesRouter = router({
         supplierName: matched?.name ?? extracted.supplier_name,
         supplierQuoteRef: extracted.supplier_quote_number,
         supplierCurrency: extracted.currency,
+        // Prefer the discount stated on the quote; fall back to the supplier's configured default
+        distributionDiscountPct:
+          extracted.distribution_discount_pct?.toString() ??
+          (matched?.defaultDiscountPct ? matched.defaultDiscountPct.toString() : undefined),
         customerName: extracted.customer_name ?? undefined,
         customerContact: extracted.customer_contact ?? undefined,
         customerAddress: extracted.customer_address ?? undefined,
@@ -79,7 +85,6 @@ export const quotesRouter = router({
         technicalDetails: extracted.technical_details || undefined,
        supplierTerms: extracted.supplier_terms_summary ?? undefined,
         footerPricingNote: extracted.footer_pricing_note ?? undefined,
-        distributionDiscountPct: extracted.distribution_discount_pct?.toString(),
         paymentTerms: extracted.payment_terms ?? undefined,
         deliveryTerms: extracted.delivery_terms ?? undefined,
         warrantyTerms: extracted.warranty_terms ?? undefined,

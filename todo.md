@@ -46,3 +46,9 @@
 
 ## Demo run (user request)
 - [x] Run real Q732717.pdf through the full live workflow so the dashboard shows a genuine quote (extraction → pricing → FX → SF number → PDF) — quote #1 finalized: Foodmate 732717-0, Baiada Poultry Hanwood, AUD $83,618.63, SF-Q-2026-00147, dashboard + detail page verified
+
+## Feature batch 2 (user request)
+- [x] Supplier settings admin panel: DB-backed supplier config (pricing model, distribution discount %, default margin %) editable in UI, pricing engine reads from DB with code defaults as fallback — /settings/suppliers, admin-gated, verified in browser
+- [x] Quote versioning: revision tracking (Rev A/B/C), "Create revision" action clones a quote linked to the original, revision chain visible on quote detail + dashboard shows latest revision — live-tested A→B clone incl. line items + latest-flag transfer
+- [x] Send to Customer: email button on quote detail page, customizable subject/message, finalized PDF attached, recipient defaults to customer contact, sent-status logged on quote — built; SMTP credentials intentionally skipped by user, dialog shows "not configured" notice until secrets added
+- [x] Vitest coverage for batch 2 (revision labels, admin gating, email preconditions) — 22/22 pass

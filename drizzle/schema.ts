@@ -46,6 +46,7 @@ export const suppliers = mysqlTable("suppliers", {
     "footer_based",
   ]).notNull(),
   defaultDiscountPct: decimal("defaultDiscountPct", { precision: 6, scale: 3 }),
+  defaultMarginPct: decimal("defaultMarginPct", { precision: 6, scale: 3 }),
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -95,6 +96,15 @@ export const quotes = mysqlTable("quotes", {
   warrantyTerms: text("warrantyTerms"),
   // Salesforce
   salesforceQuoteNumber: varchar("salesforceQuoteNumber", { length: 64 }),
+  // Versioning / revisions
+  parentQuoteId: int("parentQuoteId"),
+  rootQuoteId: int("rootQuoteId"),
+  revisionLabel: varchar("revisionLabel", { length: 8 }).default("A").notNull(),
+  isLatestRevision: int("isLatestRevision").default(1).notNull(),
+  revisionNote: text("revisionNote"),
+  // Email tracking
+  lastSentAt: timestamp("lastSentAt"),
+  lastSentTo: varchar("lastSentTo", { length: 320 }),
   // Files
   supplierPdfKey: varchar("supplierPdfKey", { length: 512 }),
   supplierPdfUrl: varchar("supplierPdfUrl", { length: 1024 }),
@@ -140,3 +150,22 @@ export const exchangeRateLog = mysqlTable("exchangeRateLog", {
 });
 
 export type ExchangeRateLogEntry = typeof exchangeRateLog.$inferSelect;
+
+/**
+ * Audit log of quotation emails sent to customers.
+ */
+export const quoteEmailLog = mysqlTable("quoteEmailLog", {
+  id: int("id").autoincrement().primaryKey(),
+  quoteId: int("quoteId").notNull(),
+  sentBy: int("sentBy").notNull(),
+  toEmail: varchar("toEmail", { length: 320 }).notNull(),
+  ccEmail: varchar("ccEmail", { length: 320 }),
+  subject: varchar("subject", { length: 500 }).notNull(),
+  message: text("message"),
+  status: mysqlEnum("status", ["sent", "failed"]).notNull(),
+  errorDetail: text("errorDetail"),
+  sentAt: timestamp("sentAt").defaultNow().notNull(),
+});
+
+export type QuoteEmailLogEntry = typeof quoteEmailLog.$inferSelect;
+export type InsertQuoteEmailLogEntry = typeof quoteEmailLog.$inferInsert;

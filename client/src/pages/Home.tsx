@@ -217,7 +217,19 @@ function Dashboard() {
                       onClick={() => navigate(`/quotes/${q.id}`)}
                     >
                       <TableCell className="font-mono text-sm font-medium text-primary">
-                        {q.salesforceQuoteNumber ?? `#${q.id}`}
+                        <span className="inline-flex items-center gap-1.5">
+                          {q.salesforceQuoteNumber ?? `#${q.id}`}
+                          {q.revisionLabel && q.revisionLabel !== "A" && (
+                            <span className="rounded bg-primary/10 px-1.5 py-0.5 font-sans text-[10px] font-semibold uppercase tracking-wide text-primary">
+                              Rev {q.revisionLabel}
+                            </span>
+                          )}
+                          {q.revisionLabel && q.revisionLabel !== "A" && !q.isLatestRevision && (
+                            <span className="rounded bg-muted px-1.5 py-0.5 font-sans text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                              Superseded
+                            </span>
+                          )}
+                        </span>
                       </TableCell>
                       <TableCell>{q.customerName ?? "—"}</TableCell>
                       <TableCell className="max-w-[220px] truncate">{q.productCategory ?? "—"}</TableCell>

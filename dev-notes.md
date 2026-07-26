@@ -85,3 +85,35 @@ Remaining pages 7-9: remarks + T&Cs (not re-inspected, unchanged since v1).
 - SF number: SF-Q-2026-00147; PDF 27KB at quotes/baiada-poultry-pty-ltd---hanwood/wing-cutter-super-cut/Quotation-sf-q-2026-00147_3f53f59a.pdf
 - Dashboard verified via screenshot: 1 total / 1 finalised, row visible; quote detail page renders all sections correctly
 - Stale esbuild error cleared by webdev_restart_server (was cached from a mid-edit state; tsc always reported 0 errors)
+
+## Feature batch 2 architecture (27 Jul 2026)
+Schema (migration 0003 applied via webdev_execute_sql, includes extra `suppliers.defaultMarginPct` decimal(6,3) NOT in generated sql — added manually):
+- suppliers: + defaultMarginPct decimal(6,3)
+- quotes: + parentQuoteId, rootQuoteId (backfilled = id), revisionLabel varchar(8) default 'A', isLatestRevision int default 1, revisionNote text, lastSentAt timestamp, lastSentTo varchar(320)
+- new table quoteEmailLog(id, quoteId, sentBy, toEmail, ccEmail, subject, message, status enum sent/failed, errorDetail, sentAt)
+Server:
+- server/routers/suppliers.ts → appRouter.suppliersAdmin {list, update(admin), create(admin)}; adminProcedure checks ctx.user.role==='admin'
+- server/routers/revisions.ts → appRouter.revisions {chain, create}; nextRevisionLabel A→B→…Z→AA; clone resets SF#/PDF/email fields, status='costed', clears isLatestRevision on family
+- server/email.ts → nodemailer SMTP via env SMTP_HOST/PORT/USER/PASS/FROM; isEmailConfigured()
+- server/routers/email.ts → appRouter.email {isConfigured, history, sendQuote}; fetches PDF bytes via storageGet presigned URL, logs to quoteEmailLog, updates lastSentAt/lastSentTo
+- quotes.uploadAndExtract now sets rootQuoteId=quoteId after insert + falls back to supplier.defaultDiscountPct
+- db.ts helpers: updateSupplier, createSupplier, getQuoteRevisions, clearLatestRevisionFlag, logQuoteEmail, getQuoteEmailLog
+Frontend TODO: Suppliers settings page (/settings/suppliers, admin), revision chain card + Create Revision button on QuoteDetail, Send to Customer dialog on QuoteDetail (finalized only), nav link in BrandHeader (35 lines), Home.tsx dashboard shows revision label + filter isLatestRevision.
+Existing UI facts: QuoteDetail.tsx (351 lines) uses trpc.quotes.get {quote, lineItems, supplier}; header buttons row at ~line 130; finalize card ~277; regenerate card ~323. useAuth() from @/_core/hooks/useAuth has user?.role. NewQuote wizard costing step has marginPct input (default 20) — should prefill from supplier.defaultMarginPct.
+SMTP secrets not yet requested from user — must call webdev_request_secrets for SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM (optional).
+
+## Feature batch 2 verification (27 Jul)
+- User SKIPPED SMTP secrets (secrets card interrupted) — email UI shows "not configured" alert; do not re-request.
+- pnpm test: 22/22 pass across 4 files incl. new server/features.test.ts (revision labels, highest-label pick, email guard, pct bounds).
+- Screenshots: dashboard + /settings/suppliers render correctly (5 suppliers listed, Add supplier button, Suppliers nav link in header). /quotes/4 showed loading skeleton in shot (query still fetching, same as previous behaviour — data exists; quote 4 = Q732717 finalized demo).
+- User id 1 (Bamah) promoted to admin role for supplier settings edit access.
+- Frontend added: pages/SupplierSettings.tsx, components/SendQuoteDialog.tsx, QuoteDetail revision card + New revision dialog + Rev badge + Send-to-customer button (finalized only), BrandHeader Suppliers link, App.tsx route /settings/suppliers.
+- Remaining before delivery: verify quote detail renders (retake screenshot), mark todo items [x], checkpoint, deliver.
+
+## Final verification (27 Jul)
+- /quotes/1 renders fully: Finalised badge, New revision button, Supplier PDF, Quotation PDF, green Send-to-customer button, details + line items + regenerate PDF card. Note: finalized demo quote is id **1** (earlier note said 4 — wrong).
+- Dashboard renders quote list (SF-Q-2026-00147, $83,618.63, Finalised) with stats cards.
+- Supplier settings page lists all 5 suppliers with pricing model, distribution discount, default margin, notes, Add supplier button.
+- Revision flow tested live via scripts/test-revision.mts: A→B clone, 2 line items copied, latest flag transfers correctly, cleanup OK.
+- 22/22 vitest pass. SMTP intentionally skipped by user.
+- Gap fixes: (1) SendQuoteDialog vite error confirmed stale — logged 23:38, file exists, server restarted 23:43, /quotes/1 renders with Send-to-customer button. (2) Dashboard now shows "Rev X" + "Superseded" badges on the quote # column for revisions beyond A. (3) Email send path code-verified: recipient defaults to first email parsed from customerContact, PDF fetched from S3 via generatedPdfKey and attached, success/failure logged to quoteEmailLog, lastSentAt/lastSentTo updated on quote. Real send untested pending SMTP secrets (user's choice).
