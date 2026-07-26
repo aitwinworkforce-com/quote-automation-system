@@ -65,3 +65,23 @@ Remaining pages 7-9: remarks + T&Cs (not re-inspected, unchanged since v1).
 - Minor: technical_details not rendered on spec page (page 5 sparse) — check pdfGenerator passes technicalDetails; not blocking.
 - Pages 6-9 VERIFIED: p6 pricing table (blue header, green ex-works total row €42,146.25, blue AUD total row $83,618.63, rate note @0.6142, freight/install rows, invoicing bullet notes, Payment & Delivery Conditions block with validity/delivery/payment/warranty) — matches template. p7 Remarks (supplier terms verbatim). p8-9 full 14-clause Oestergaard T&Cs. PDF output is production-quality.
 - FIXED & VERIFIED: technicalDetails column added to quotes schema (migration 0002 applied), persisted in uploadAndExtract + editable via updateDetails, rendered on PDF spec page (p5) as a "Technical Details" block under the product description. Visual check passed.
+
+## Demo script (scripts/demo-live-quote.mts) — verified API shapes
+- extractQuoteFromPdf(pdfBuffer, fileName) — TWO args; output snake_case (see above)
+- applySupplierPricingModel(model: PricingModel, input: PricingInput) — NOT applySupplierPricing
+- calculateCosting(input: CostingInput) — camelCase input, exchangeRate is AUD→foreign
+- CostingResult: {lineItems (with netUnitCost/sellUnitPrice/sellTotalPrice/explanation), totalCostForeign, totalSellForeign, totalSellAud, freightCostAud, installationCostAud, otherLocalCostAud, grandTotalAud, currency, exchangeRate, marginPct}
+- fetchLiveRates() → {base:"AUD", audEur, audUsd, source, fetchedAt}
+- generateQuotePdf(quote: Quote, lineItems: QuoteLineItem[]) — TWO args
+- storagePut(relKey, data, contentType?) → {key, url}
+- Line items go in quoteLineItems table (separate insert), decimal cols are strings
+- Best approach: mirror what server/routers/quotes.ts + server/routers/pdf.ts do internally
+
+## Demo run RESULT (27 Jul 2026) — SUCCESS
+- Quote #1 finalized: Foodmate 732717-0, Baiada Poultry Pty Ltd - Hanwood (Mr. Simon Camilleri, Murphy Rd NSW 2680 Hanwood)
+- 2 line items: Wing Cutter Super Cut for Marel cut up system €32,665 + misc suspension €1,052
+- FX: AUD/EUR 0.61421 (ECB via Frankfurter 2026-07-24), confirmed + logged
+- Costing: cost €33,717 → sell €42,146.25 (20% margin) → AUD 68,618.63 + freight 5,000 + install 10,000 = grand total AUD 83,618.63
+- SF number: SF-Q-2026-00147; PDF 27KB at quotes/baiada-poultry-pty-ltd---hanwood/wing-cutter-super-cut/Quotation-sf-q-2026-00147_3f53f59a.pdf
+- Dashboard verified via screenshot: 1 total / 1 finalised, row visible; quote detail page renders all sections correctly
+- Stale esbuild error cleared by webdev_restart_server (was cached from a mid-edit state; tsc always reported 0 errors)

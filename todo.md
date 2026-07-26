@@ -39,3 +39,10 @@
 - [x] Vitest: exchange rate service (live fetch)
 - [x] E2E script with real Foodmate PDF (extraction → FX → costing → SF number → PDF) verified
 - [x] Browser verification: dashboard + wizard screenshots verified
+
+## T&Cs integration (user request)
+- [x] Extract Oestergaard T&Cs from Word template + Foodmate GTC from Appendix PDF into termsContent.ts
+- [x] PDF generator renders combined Oestergaard + supplier T&Cs
+
+## Demo run (user request)
+- [x] Run real Q732717.pdf through the full live workflow so the dashboard shows a genuine quote (extraction → pricing → FX → SF number → PDF) — quote #1 finalized: Foodmate 732717-0, Baiada Poultry Hanwood, AUD $83,618.63, SF-Q-2026-00147, dashboard + detail page verified
