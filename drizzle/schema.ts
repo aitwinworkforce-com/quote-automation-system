@@ -58,7 +58,7 @@ export type InsertSupplier = typeof suppliers.$inferInsert;
 export const quotes = mysqlTable("quotes", {
   id: int("id").autoincrement().primaryKey(),
   createdBy: int("createdBy").notNull(),
-  status: mysqlEnum("status", ["draft", "extracted", "costed", "awaiting_sf_number", "finalized"])
+  status: mysqlEnum("status", ["draft", "extracted", "costed", "awaiting_sf_number", "in_review", "finalized"])
     .default("draft")
     .notNull(),
   // Header / customer fields
@@ -80,6 +80,9 @@ export const quotes = mysqlTable("quotes", {
   exchangeRate: decimal("exchangeRate", { precision: 12, scale: 6 }),
   exchangeRateConfirmed: int("exchangeRateConfirmed").default(0).notNull(),
   exchangeRateSource: varchar("exchangeRateSource", { length: 128 }),
+  rateConfirmedBy: int("rateConfirmedBy"),
+  rateConfirmedByName: varchar("rateConfirmedByName", { length: 255 }),
+  rateConfirmedAt: timestamp("rateConfirmedAt"),
   marginPct: decimal("marginPct", { precision: 6, scale: 3 }),
   distributionDiscountPct: decimal("distributionDiscountPct", { precision: 6, scale: 3 }),
   freightCostAud: decimal("freightCostAud", { precision: 14, scale: 2 }),
@@ -96,6 +99,12 @@ export const quotes = mysqlTable("quotes", {
   warrantyTerms: text("warrantyTerms"),
   // Salesforce
   salesforceQuoteNumber: varchar("salesforceQuoteNumber", { length: 64 }),
+  // Approval workflow
+  submittedForReviewAt: timestamp("submittedForReviewAt"),
+  submittedForReviewBy: int("submittedForReviewBy"),
+  approvedAt: timestamp("approvedAt"),
+  approvedBy: int("approvedBy"),
+  approvedByName: varchar("approvedByName", { length: 255 }),
   // Versioning / revisions
   parentQuoteId: int("parentQuoteId"),
   rootQuoteId: int("rootQuoteId"),

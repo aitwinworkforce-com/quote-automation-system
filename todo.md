@@ -57,3 +57,9 @@
 - [x] Verify exchange-rate confirmation step (wizard Step 3) renders and blocks progression until confirmed — verified in code (NewQuote.tsx L542-636): checkbox must be ticked, only setStep(4) path is via successful confirmRate mutation; UI step bar + confirmed rate on detail page verified via screenshot; also proven during the earlier live E2E run of Q732717.pdf
 - [x] Verify revision controls (New revision button + revision chain card) render on quote detail — "New revision" button present; chain card previously hidden for single-revision quotes
 - [x] Improve visibility: revision history card now always visible (shows Rev A with guidance text when no revisions exist yet)
+
+## Feature batch 3 (user request: "add all 3")
+- [x] Rate audit stamp: record who confirmed the exchange rate and when (rateConfirmedBy/Name/At, migration 0004); green "Exchange rate confirmed by [name] on [time]" banner on quote detail — verified via screenshot (demo quote backfilled)
+- [x] Editable revision line items: revision dialog now includes qty/list/net/sell editors per line item; server recomputes foreign totals, AUD conversion, and grand total on create — mirrored in features3 tests
+- [x] Approval workflow: in_review status added to enum/labels/StatusBadge (orange); submitForReview (costed/awaiting_sf_number → in_review) + admin-only approve (→ finalized or awaiting_sf_number based on SF#/PDF) with approvedByName/At stamp shown on detail
+- [x] Vitest coverage for batch 3 (features3.test.ts: totals recompute, transition guards, enum completeness) — 29/29 pass

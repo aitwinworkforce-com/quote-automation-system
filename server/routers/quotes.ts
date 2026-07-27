@@ -130,6 +130,9 @@ export const quotesRouter = router({
         exchangeRate: input.rate.toString(),
         exchangeRateConfirmed: 1,
         exchangeRateSource: input.source,
+        rateConfirmedBy: ctx.user.id,
+        rateConfirmedByName: ctx.user.name ?? `User #${ctx.user.id}`,
+        rateConfirmedAt: new Date(),
       });
       await db.logExchangeRate({
         quoteId: input.quoteId,

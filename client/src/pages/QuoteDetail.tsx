@@ -27,7 +27,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  ArrowLeft, Download, FileText, GitBranch, Loader2, RefreshCw, Trash2, TriangleAlert,
+  ArrowLeft, CheckCircle2, Download, FileText, GitBranch, Loader2, Pencil, RefreshCw,
+  ShieldCheck, Trash2, TriangleAlert,
 } from "lucide-react";
 
 const fmt = (v: string | number | null | undefined, prefix = "") => {
@@ -38,7 +39,7 @@ const fmt = (v: string | number | null | undefined, prefix = "") => {
 };
 
 export default function QuoteDetail() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const [, params] = useRoute("/quotes/:id");
   const [, navigate] = useLocation();
   const quoteId = Number(params?.id);
@@ -46,6 +47,10 @@ export default function QuoteDetail() {
   const [sfNumber, setSfNumber] = useState("");
   const [revisionNote, setRevisionNote] = useState("");
   const [revisionDialogOpen, setRevisionDialogOpen] = useState(false);
+  const [editItems, setEditItems] = useState(false);
+  const [editedItems, setEditedItems] = useState<
+    { description: string; quantity: string; listUnitPrice: string; netUnitCost: string; sellUnitPrice: string }[]
+  >([]);
 
   const { data, isLoading, refetch } = trpc.quotes.get.useQuery(
     { quoteId },
@@ -59,6 +64,8 @@ export default function QuoteDetail() {
   const generatePdf = trpc.pdf.generateQuote.useMutation();
   const deleteQuote = trpc.quotes.delete.useMutation();
   const createRevision = trpc.revisions.create.useMutation();
+  const submitForReview = trpc.revisions.submitForReview.useMutation();
+  const approveQuote = trpc.revisions.approve.useMutation();
   const utils = trpc.useUtils();
 
   if (loading || (isAuthenticated && isLoading)) {
@@ -101,18 +108,72 @@ export default function QuoteDetail() {
 
   const handleCreateRevision = async () => {
     try {
+      let items;
+      if (editItems && editedItems.length > 0) {
+        items = editedItems.map(li => ({
+          description: li.description,
+          quantity: Number(li.quantity) || 0,
+          listUnitPrice: li.listUnitPrice === "" ? null : Number(li.listUnitPrice),
+          netUnitCost: li.netUnitCost === "" ? null : Number(li.netUnitCost),
+          sellUnitPrice: Number(li.sellUnitPrice) || 0,
+        }));
+        if (items.some(li => li.quantity <= 0 || !li.description.trim())) {
+          toast.error("Each line item needs a description and a quantity above zero");
+          return;
+        }
+      }
       const res = await createRevision.mutateAsync({
         quoteId,
         note: revisionNote.trim() || undefined,
+        items,
       });
       setRevisionDialogOpen(false);
       setRevisionNote("");
+      setEditItems(false);
       utils.quotes.list.invalidate();
       utils.revisions.chain.invalidate();
       toast.success(`Revision ${res.revisionLabel} created`);
       navigate(`/quotes/${res.newQuoteId}`);
     } catch (e: any) {
       toast.error(e.message ?? "Failed to create revision");
+    }
+  };
+
+  const openRevisionDialog = (open: boolean) => {
+    if (open) {
+      setEditedItems(
+        lineItems.map(li => ({
+          description: li.description ?? "",
+          quantity: String(Number(li.quantity) || 1),
+          listUnitPrice: li.listUnitPrice != null ? String(Number(li.listUnitPrice)) : "",
+          netUnitCost: li.netUnitCost != null ? String(Number(li.netUnitCost)) : "",
+          sellUnitPrice: li.sellUnitPrice != null ? String(Number(li.sellUnitPrice)) : "0",
+        })),
+      );
+      setEditItems(false);
+    }
+    setRevisionDialogOpen(open);
+  };
+
+  const handleSubmitForReview = async () => {
+    try {
+      await submitForReview.mutateAsync({ quoteId });
+      await refetch();
+      utils.quotes.list.invalidate();
+      toast.success("Quote submitted for review");
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed to submit for review");
+    }
+  };
+
+  const handleApprove = async () => {
+    try {
+      await approveQuote.mutateAsync({ quoteId });
+      await refetch();
+      utils.quotes.list.invalidate();
+      toast.success("Quote approved");
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed to approve");
     }
   };
 
@@ -161,13 +222,13 @@ export default function QuoteDetail() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Dialog open={revisionDialogOpen} onOpenChange={setRevisionDialogOpen}>
+            <Dialog open={revisionDialogOpen} onOpenChange={openRevisionDialog}>
               <DialogTrigger asChild>
                 <Button variant="outline">
                   <GitBranch className="h-4 w-4" /> New revision
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
+              <DialogContent className={editItems ? "sm:max-w-3xl" : "sm:max-w-md"}>
                 <DialogHeader>
                   <DialogTitle>Create revision {quote.revisionLabel ? `(next after Rev ${quote.revisionLabel})` : ""}</DialogTitle>
                   <DialogDescription>
@@ -184,8 +245,103 @@ export default function QuoteDetail() {
                     onChange={e => setRevisionNote(e.target.value)}
                   />
                 </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant={editItems ? "secondary" : "outline"}
+                    size="sm"
+                    onClick={() => setEditItems(v => !v)}
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                    {editItems ? "Editing line items" : "Edit line items in this revision"}
+                  </Button>
+                  {!editItems && (
+                    <span className="text-xs text-muted-foreground">Otherwise items are copied unchanged.</span>
+                  )}
+                </div>
+                {editItems && (
+                  <div className="max-h-72 overflow-y-auto rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-[40%]">Description</TableHead>
+                          <TableHead>Qty</TableHead>
+                          <TableHead>Net cost ({currency})</TableHead>
+                          <TableHead>Sell unit ({currency})</TableHead>
+                          <TableHead>Sell total ({currency})</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {editedItems.map((li, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell>
+                              <Input
+                                value={li.description}
+                                onChange={e =>
+                                  setEditedItems(items =>
+                                    items.map((it, i) => (i === idx ? { ...it, description: e.target.value } : it)),
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                min="0"
+                                className="w-20"
+                                value={li.quantity}
+                                onChange={e =>
+                                  setEditedItems(items =>
+                                    items.map((it, i) => (i === idx ? { ...it, quantity: e.target.value } : it)),
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                className="w-28"
+                                value={li.netUnitCost}
+                                onChange={e =>
+                                  setEditedItems(items =>
+                                    items.map((it, i) => (i === idx ? { ...it, netUnitCost: e.target.value } : it)),
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                className="w-28"
+                                value={li.sellUnitPrice}
+                                onChange={e =>
+                                  setEditedItems(items =>
+                                    items.map((it, i) => (i === idx ? { ...it, sellUnitPrice: e.target.value } : it)),
+                                  )
+                                }
+                              />
+                            </TableCell>
+                            <TableCell className="text-sm font-medium">
+                              {fmt((Number(li.quantity) || 0) * (Number(li.sellUnitPrice) || 0))}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+                {editItems && (
+                  <p className="text-xs text-muted-foreground">
+                    Totals (sell {currency}, AUD and grand total) are recalculated automatically using the
+                    original confirmed exchange rate and local costs.
+                  </p>
+                )}
                 <DialogFooter>
-                  <Button variant="outline" onClick={() => setRevisionDialogOpen(false)}>Cancel</Button>
+                  <Button variant="outline" onClick={() => openRevisionDialog(false)}>Cancel</Button>
                   <Button onClick={() => void handleCreateRevision()} disabled={createRevision.isPending}>
                     {createRevision.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                     Create revision
@@ -327,6 +483,28 @@ export default function QuoteDetail() {
                   </div>
                 ))}
               </dl>
+              {!!quote.exchangeRateConfirmed && quote.rateConfirmedByName && (
+                <div className="mt-4 flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                  <ShieldCheck className="h-4 w-4 shrink-0" />
+                  <span>
+                    Exchange rate confirmed by <strong>{quote.rateConfirmedByName}</strong>
+                    {quote.rateConfirmedAt
+                      ? ` on ${new Date(quote.rateConfirmedAt).toLocaleString("en-AU", { dateStyle: "medium", timeStyle: "short" })}`
+                      : ""}
+                  </span>
+                </div>
+              )}
+              {quote.approvedByName && (
+                <div className="mt-2 flex items-center gap-2 rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-800">
+                  <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  <span>
+                    Approved by <strong>{quote.approvedByName}</strong>
+                    {quote.approvedAt
+                      ? ` on ${new Date(quote.approvedAt).toLocaleString("en-AU", { dateStyle: "medium", timeStyle: "short" })}`
+                      : ""}
+                  </span>
+                </div>
+              )}
               {quote.productDescription && (
                 <p className="mt-4 rounded-md bg-muted/50 p-3 text-sm">{quote.productDescription}</p>
               )}
@@ -393,8 +571,50 @@ export default function QuoteDetail() {
             </CardContent>
           </Card>
 
+          {/* Review & approval */}
+          {["costed", "awaiting_sf_number", "in_review"].includes(quote.status) && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4" /> Review &amp; approval
+                </CardTitle>
+                <CardDescription>
+                  {quote.status === "in_review"
+                    ? "This quote is awaiting manager approval before it can be finalised."
+                    : "Optionally submit this quote for manager review before finalising."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-wrap items-center gap-3">
+                {quote.status !== "in_review" ? (
+                  <Button
+                    variant="outline"
+                    onClick={() => void handleSubmitForReview()}
+                    disabled={submitForReview.isPending}
+                  >
+                    {submitForReview.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                    Submit for review
+                  </Button>
+                ) : user?.role === "admin" ? (
+                  <Button onClick={() => void handleApprove()} disabled={approveQuote.isPending}>
+                    {approveQuote.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                    <CheckCircle2 className="h-4 w-4" /> Approve quote
+                  </Button>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Waiting for a manager (admin) to approve. You'll be able to finalise once approved.
+                  </p>
+                )}
+                {quote.submittedForReviewAt && quote.status === "in_review" && (
+                  <span className="text-xs text-muted-foreground">
+                    Submitted {new Date(quote.submittedForReviewAt).toLocaleString("en-AU", { dateStyle: "medium", timeStyle: "short" })}
+                  </span>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {/* Finalise / regenerate */}
-          {quote.status !== "finalized" && (
+          {quote.status !== "finalized" && quote.status !== "in_review" && (
             <Card>
               <CardHeader>
                 <CardTitle>Finalise</CardTitle>

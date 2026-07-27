@@ -128,3 +128,37 @@ Explanation doc gap: user also noted the doc DID mention these, possibly they lo
 Planned improvements: (a) make revision history card always visible (even single Rev A) so feature is discoverable; (b) consider hint text on wizard upload step that rate confirmation comes at step 3.
 
 Code-level proof of the Step 3 gate (NewQuote.tsx): step 3 UI at lines 542-636 — rate fetch enabled only when step===3; user must tick a checkbox ("I confirm the {pair} exchange rate of …", rateConfirmChecked) or handleConfirmRate errors with "Please tick the confirmation box"; the only path to step 4 is via handleConfirmRate → confirmRate mutation success → setStep(4) at line ~221. No other setStep(4) exists, so progression is hard-blocked until explicit confirmation. Revision card fix applied (always renders with guidance text when single Rev A) and verified via screenshot.
+
+## Feature batch 3 (in progress): audit stamp + editable revision items + approval workflow
+Checkpoint b43de8f6 = stable pre-batch-3 state.
+Schema changes DONE in drizzle/schema.ts (need migration): quotes gains rateConfirmedBy(int), rateConfirmedByName(varchar255), rateConfirmedAt(ts), submittedForReviewAt(ts), submittedForReviewBy(int), approvedAt(ts), approvedBy(int), approvedByName(varchar255); status enum now includes "in_review" between awaiting_sf_number and finalized.
+Migration approach used previously: `pnpm drizzle-kit generate` then read .sql and apply via webdev_execute_sql (db:push not used; TiDB). For enum change need ALTER TABLE quotes MODIFY status enum(...).
+Key integration points:
+- confirmRate mutation in server/routers/quotes.ts — set rateConfirmedBy/Name/At from ctx.user (id, name); already logs to exchangeRateLog (confirmedBy/confirmedAt exist there).
+- QuoteDetail.tsx "Exchange rate" dl row — append stamp "confirmed by {name} at {time}".
+- Revision creation: server/routers/revisions.ts `create` clones line items via getQuoteLineItems/replaceQuoteLineItems; extend input with optional items[] (id?, description, quantity, listUnitPrice, netUnitCost, sellUnitPrice) — recompute sellTotalPrice=qty*sellUnitPrice and quote totals (totalSellForeign=sum sellTotal, totalSellAud=totalSellForeign/rate? NOTE: existing convention — totalSellAud = totalSellForeign / exchangeRate (EUR→AUD divide), grandTotalAud = totalSellAud + freight+install+other). Check quotes.ts costing step for exact formula before implementing.
+- Revision dialog in QuoteDetail.tsx (revisionDialogOpen) — add editable line-items table.
+- Approval workflow: new mutations submitForReview (finalized? no — from costed/awaiting_sf/draft → in_review) and approve (in_review → finalized, sets approvedBy/Name/At; admin-gated approve). StatusBadge components: client Home.tsx + QuoteDetail.tsx have StatusBadge — add in_review (amber "In review"). Wizard finalize currently sets status finalized — keep direct finalize allowed, approval optional path.
+- StatusBadge locations: client/src/pages/Home.tsx and QuoteDetail.tsx (both define or import one — check shared component).
+- Vitest: add server/batch3.test.ts — status transitions, approve gating, revision item recompute.
+Stale vite error in logs (SendQuoteDialog) is stale from 23:38 — file exists, page renders fine.
+
+## Batch 3 progress (rate stamp, revision item editor, review workflow)
+- Schema+migration 0004 APPLIED to DB: quotes gained rateConfirmedBy/rateConfirmedByName/rateConfirmedAt, submittedForReviewAt/By, approvedAt/approvedBy/approvedByName, status enum now includes `in_review`.
+- Backend DONE: quotes.confirmRate stamps user id/name/time; revisions.create accepts optional items[] and recomputes totals; revisions.submitForReview; revisions.approve (admin only).
+- Frontend DONE: QuoteDetail has emerald rate-confirmation stamp + sky approval stamp, revision dialog with editable line-items table, Review & approval card (Submit for review / Approve admin-only), Finalise hidden while in_review.
+- Vite console errors about SendQuoteDialog are STALE (23:38; file exists; server restarted 00:28; tsc 0 errors).
+- REMAINING: vitest additions for batch 3, screenshot verify, todo.md tick, checkpoint, deliver.
+
+## Batch 3 verification (00:35)
+- vitest: 29/29 pass across 5 files (features3.test.ts adds 7 tests).
+- Screenshot /quotes/1: page renders fine, revision history card + Send to customer + all cards OK. Rate-confirmed stamp NOT shown for quote 1 because it was confirmed BEFORE the stamp columns existed (rateConfirmedByName null). Backfill for demo quote 1 is optional cosmetic.
+- Dashboard renders (list mid-load in shot, stats cards mid-load; API healthy).
+- in_review added to shared QUOTE_STATUSES/STATUS_LABELS + StatusBadge orange style.
+
+## Batch 3 final verification (00:40)
+- Integration test scripts/test-batch3-flow.mts PASSED against live DB: Rev B created with EDITED items (qty 1→2, 5% sell discount), persisted qty verified, recomputed grand total matched (143448.54), submitForReview→in_review verified, approve→awaiting_sf_number with approvedByName=Bamah + approvedAt stamp verified, cleanup restored base quote.
+- Audit stamp verified in browser: green "Exchange rate confirmed by Bamah on 27 July 2026, 12:34 am" banner on /quotes/1.
+- Orphan quote 90001 (from first failed test run before line-item insert) deleted; quote 1 restored isLatestRevision=1; clean single Rev A history confirmed via screenshot.
+- Stale vite SendQuoteDialog errors in tool output are from 23:38 (pre-restart); page renders fine, tsc 0 errors.
+- vitest 29/29 pass.

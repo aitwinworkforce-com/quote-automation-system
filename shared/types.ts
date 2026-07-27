@@ -7,7 +7,7 @@ export type * from "../drizzle/schema";
 export * from "./_core/errors";
 // ===== Oestergaard Quote Agent shared types =====
 
-export const QUOTE_STATUSES = ["draft", "extracted", "costed", "awaiting_sf_number", "finalized"] as const;
+export const QUOTE_STATUSES = ["draft", "extracted", "costed", "awaiting_sf_number", "in_review", "finalized"] as const;
 export type QuoteStatus = (typeof QUOTE_STATUSES)[number];
 
 export const STATUS_LABELS: Record<QuoteStatus, string> = {
@@ -15,6 +15,7 @@ export const STATUS_LABELS: Record<QuoteStatus, string> = {
   extracted: "Extracted",
   costed: "Costed",
   awaiting_sf_number: "Awaiting SF Number",
+  in_review: "In Review",
   finalized: "Finalised",
 };
 
