@@ -117,3 +117,14 @@ SMTP secrets not yet requested from user — must call webdev_request_secrets fo
 - Revision flow tested live via scripts/test-revision.mts: A→B clone, 2 line items copied, latest flag transfers correctly, cleanup OK.
 - 22/22 vitest pass. SMTP intentionally skipped by user.
 - Gap fixes: (1) SendQuoteDialog vite error confirmed stale — logged 23:38, file exists, server restarted 23:43, /quotes/1 renders with Send-to-customer button. (2) Dashboard now shows "Rev X" + "Superseded" badges on the quote # column for revisions beyond A. (3) Email send path code-verified: recipient defaults to first email parsed from customerContact, PDF fetched from S3 via generatedPdfKey and attached, success/failure logged to quoteEmailLog, lastSentAt/lastSentTo updated on quote. Real send untested pending SMTP secrets (user's choice).
+
+## Visibility verification (user report: "exchange rate and revisions not there")
+Findings from live screenshots (27 Jul):
+- Wizard /quotes/new: step bar shows 5 steps incl. "3 Exchange Rate" — the confirmation gate IS there but only reachable mid-flow after uploading a PDF; user may not have seen it because they didn't run a new quote.
+- Quote detail /quotes/1: "New revision" button IS present (top-left button row), exchange rate shown as "0.6142 (confirmed)" with rate source ECB/Frankfurter. Revision history card only renders when chain length > 1 (by design) — quote 1 currently sole Rev A (test Rev B was cleaned up), so no chain card shows.
+- DB state: only quote id 1, Rev A, isLatest=1, finalized, SF-Q-2026-00147.
+- Supplier settings page renders fine (5 suppliers, pricing models, Add supplier button).
+Explanation doc gap: user also noted the doc DID mention these, possibly they looked at the diagrams only — all 3 diagrams DO include FX confirm + revisions, so the report is most likely about the APP UI visibility.
+Planned improvements: (a) make revision history card always visible (even single Rev A) so feature is discoverable; (b) consider hint text on wizard upload step that rate confirmation comes at step 3.
+
+Code-level proof of the Step 3 gate (NewQuote.tsx): step 3 UI at lines 542-636 — rate fetch enabled only when step===3; user must tick a checkbox ("I confirm the {pair} exchange rate of …", rateConfirmChecked) or handleConfirmRate errors with "Please tick the confirmation box"; the only path to step 4 is via handleConfirmRate → confirmRate mutation success → setStep(4) at line ~221. No other setStep(4) exists, so progression is hard-blocked until explicit confirmation. Revision card fix applied (always renders with guidance text when single Rev A) and verified via screenshot.

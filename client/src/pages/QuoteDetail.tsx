@@ -242,13 +242,17 @@ export default function QuoteDetail() {
 
         <div className="grid gap-6">
           {/* Revision history */}
-          {revisionChain && revisionChain.length > 1 && (
+          {revisionChain && revisionChain.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <GitBranch className="h-4 w-4" /> Revision history
                 </CardTitle>
-                <CardDescription>All iterations of this quotation, linked for a complete audit trail.</CardDescription>
+                <CardDescription>
+                  {revisionChain.length > 1
+                    ? "All iterations of this quotation, linked for a complete audit trail."
+                    : "This is the original version (Rev A). Use the \"New revision\" button above to create a linked Rev B when the customer requests changes."}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <Table>

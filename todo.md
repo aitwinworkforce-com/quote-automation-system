@@ -52,3 +52,8 @@
 - [x] Quote versioning: revision tracking (Rev A/B/C), "Create revision" action clones a quote linked to the original, revision chain visible on quote detail + dashboard shows latest revision — live-tested A→B clone incl. line items + latest-flag transfer
 - [x] Send to Customer: email button on quote detail page, customizable subject/message, finalized PDF attached, recipient defaults to customer contact, sent-status logged on quote — built; SMTP credentials intentionally skipped by user, dialog shows "not configured" notice until secrets added
 - [x] Vitest coverage for batch 2 (revision labels, admin gating, email preconditions) — 22/22 pass
+
+## Visibility verification (user report)
+- [x] Verify exchange-rate confirmation step (wizard Step 3) renders and blocks progression until confirmed — verified in code (NewQuote.tsx L542-636): checkbox must be ticked, only setStep(4) path is via successful confirmRate mutation; UI step bar + confirmed rate on detail page verified via screenshot; also proven during the earlier live E2E run of Q732717.pdf
+- [x] Verify revision controls (New revision button + revision chain card) render on quote detail — "New revision" button present; chain card previously hidden for single-revision quotes
+- [x] Improve visibility: revision history card now always visible (shows Rev A with guidance text when no revisions exist yet)
