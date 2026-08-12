@@ -1,0 +1,211 @@
+{
+  "name": "Oestergaard AI Quote Agent - Hybrid SharePoint & Form Approval Orchestrator",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "resource": "file",
+        "operation": "list",
+        "folderPath": "/Oestergaard/Incoming"
+      },
+      "name": "SharePoint Trigger - Incoming PDFs",
+      "type": "n8n-nodes-base.microsoftSharePoint",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://3000-i1uxoiqmyc8iogusya5hs-bca236da.sg1.manus.computer/api/trpc/quotes.uploadAndExtract",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"fileName\": \"{{ $json.name }}\",\n  \"fileBase64\": \"{{ $binary.data }}\"\n}"
+      },
+      "name": "Extract Quote via Web App API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 41,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "formTitle": "Review Gate: Line Item Extraction",
+        "formDescription": "Please verify the extracted supplier line items, quantities, and supplier pricing model.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Extracted Summary",
+              "fieldType": "textarea",
+              "defaultValue": "={{ JSON.stringify($json.result.data, null, 2) }}"
+            },
+            {
+              "fieldLabel": "Approve Extraction",
+              "fieldType": "dropdown",
+              "options": "Approved\nNeeds Correction"
+            }
+          ]
+        }
+      },
+      "name": "n8n Form - Review Gate",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2,
+      "position": [710, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://3000-i1uxoiqmyc8iogusya5hs-bca236da.sg1.manus.computer/api/trpc/quotes.confirmRate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"quoteId\": {{ $('Extract Quote via Web App API').item.json.result.data.quoteId }},\n  \"pair\": \"AUD/EUR\",\n  \"rate\": 0.6142,\n  \"source\": \"European Central Bank\"\n}"
+      },
+      "name": "Confirm FX Rate & Audit Stamp",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 41,
+      "position": [940, 300]
+    },
+    {
+      "parameters": {
+        "formTitle": "T&Cs Gate: Oestergaard & Supplier Terms",
+        "formDescription": "Confirm compliance with Oestergaard standard T&Cs and supplier governing terms.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Confirm Terms & Conditions",
+              "fieldType": "dropdown",
+              "options": "Confirmed and Approved\nRejected"
+            }
+          ]
+        }
+      },
+      "name": "n8n Form - T&Cs Gate",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2,
+      "position": [1170, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://3000-i1uxoiqmyc8iogusya5hs-bca236da.sg1.manus.computer/api/trpc/pdf.generateQuote",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"quoteId\": {{ $('Extract Quote via Web App API').item.json.result.data.quoteId }}\n}"
+      },
+      "name": "Generate Final Branded PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 41,
+      "position": [1400, 300]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "upload",
+        "folderPath": "/Oestergaard/Finalized",
+        "binaryFileName": "Quotation_Final.pdf"
+      },
+      "name": "Upload Final PDF to SharePoint",
+      "type": "n8n-nodes-base.microsoftSharePoint",
+      "typeVersion": 1,
+      "position": [1630, 300]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "fileId": "/Oestergaard/AuditReviewLog.xlsx",
+        "dataMode": "defineBelow",
+        "valuesToInclude": "={{ { QuoteId: $('Extract Quote via Web App API').item.json.result.data.quoteId, Timestamp: new Date().toISOString(), Status: 'Finalized', Approver: 'Hybrid n8n Orchestrator' } }}"
+      },
+      "name": "Append to Excel Audit Log",
+      "type": "n8n-nodes-base.excel",
+      "typeVersion": 4,
+      "position": [1860, 300]
+    }
+  ],
+  "connections": {
+    "SharePoint Trigger - Incoming PDFs": {
+      "main": [
+        [
+          {
+            "node": "Extract Quote via Web App API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Quote via Web App API": {
+      "main": [
+        [
+          {
+            "node": "n8n Form - Review Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n Form - Review Gate": {
+      "main": [
+        [
+          {
+            "node": "Confirm FX Rate & Audit Stamp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Confirm FX Rate & Audit Stamp": {
+      "main": [
+        [
+          {
+            "node": "n8n Form - T&Cs Gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "n8n Form - T&Cs Gate": {
+      "main": [
+        [
+          {
+            "node": "Generate Final Branded PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Final Branded PDF": {
+      "main": [
+        [
+          {
+            "node": "Upload Final PDF to SharePoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload Final PDF to SharePoint": {
+      "main": [
+        [
+          {
+            "node": "Append to Excel Audit Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

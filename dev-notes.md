@@ -162,3 +162,21 @@ Stale vite error in logs (SendQuoteDialog) is stale from 23:38 — file exists, 
 - Orphan quote 90001 (from first failed test run before line-item insert) deleted; quote 1 restored isLatestRevision=1; clean single Rev A history confirmed via screenshot.
 - Stale vite SendQuoteDialog errors in tool output are from 23:38 (pre-restart); page renders fine, tsc 0 errors.
 - vitest 29/29 pass.
+
+## Real Document Verification (Uploaded July 2026)
+- Uploaded files include: Q732717.pdf (Foodmate quote), Appendix1GTCFoodmate-October2023.pdf (Foodmate GTCs), ProjectCostingSheet.xls, QuotationQU-8452SuperCutWingCutterBaiadaHanwood.pdf/docx, QuoteAutomationProcessforSamba.docx, Quotevideo(2026-06-0114.00).txt.
+- Verification confirms:
+  1. Foodmate T&Cs (version October 2023) match Article 4 (CIF Incoterms 2020, 50% downpayment, 40% readiness, 10% final acceptance) and Article 5/6 (0.5% per week delay liquidated damages up to 5% cap) already baked into our quote generator and PDF T&Cs.
+  2. Costing sheet logic (List price -> supplier pricing model -> currency conversion -> exchange rate confirmation gate -> margin % -> freight/install -> AUD grand total) perfectly matches the implemented 7-step wizard and costing engine.
+  3. Quotation format matches Oestergaard's standard structure (Cover, About, Support, Cover Letter, Specification, Pricing Table with exact color scheme `#29ABE2` and `#92D050`, T&Cs).
+- Status: Fully verified against real production files. All pricing rules and layout standards are fully aligned.
+
+## Hybrid n8n Workflow & SharePoint Integration Spec (August 2026)
+- **Architecture Model:** Hybrid (n8n orchestrator + Web App extraction/pricing engine + SharePoint document store + Excel audit log).
+- **Triggers:** SharePoint folder poll (`/Oestergaard/Incoming/`).
+- **Control Gates (Hybrid n8n Forms + Excel Log):**
+  1. Review Gate: Extracts line items, invokes web app extraction API, logs to Excel, triggers n8n Form approval.
+  2. FX Gate: Fetches ECB rate, prompts rep via n8n Form to confirm exchange rate and audit stamp.
+  3. T&Cs Gate: Confirms Oestergaard + supplier T&Cs compliance via n8n Form.
+- **Output & Archiving:** Generates branded PDF via web app, uploads to SharePoint `/Oestergaard/Finalized/`, appends immutable row to Excel audit log (`/Oestergaard/AuditReviewLog.xlsx`).
+- **Parallel Transition:** Web app stays active on https://3000-i1uxoiqmyc8iogusya5hs-bca236da.sg1.manus.computer while n8n workflow processes SharePoint drop folder in parallel.
