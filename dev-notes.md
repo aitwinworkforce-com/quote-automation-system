@@ -187,3 +187,9 @@ Stale vite error in logs (SendQuoteDialog) is stale from 23:38 — file exists, 
 - Main error: Send an HTTP request to Azure DevOps is the wrong connector for PDF extraction. It is for Azure DevOps REST APIs. Replace it with the Azure AI Document Intelligence (Form Recognizer) connector action "Analyze Document for Prebuilt or Custom models" (v3.x or v4.x API), using the SharePoint Get file content output.
 - Get items should be placed after extraction only if it is looking up SupplierRules from a SharePoint list; it is not an AI extraction step.
 - Sources verified: https://learn.microsoft.com/en-us/connectors/formrecognizer/ and https://learn.microsoft.com/en-us/sharepoint/dev/business-apps/power-automate/sharepoint-connector-actions-triggers
+
+## Four Approved Workstreams Implementation Plan (August 2026)
+1. **Multi-vendor supplier profiles & pricing rules:** Extend `suppliers` table and `server/pricing.ts` to fully support Henneken (`list_minus_distribution` with configurable 25%/30% tiering) and KFC Cut-up / Foodmate lines alongside Collimatic, Marlin, Nutri Soy, and Phenova.
+2. **Real Henneken/KFC document validation:** Add comprehensive vitest tests in `server/pricing.test.ts` matching actual values from `Costing.xlsx` and `KFCCut-upCostsheet.xlsx`.
+3. **Multi-vendor review & audit workspace:** Ensure `QuoteDetail.tsx` and review screens display the active vendor pricing model, rule version, FX confirmation audit stamp (`rateConfirmedByName/At`), review/approval stamps, and editable line items.
+4. **Publish & custom-domain readiness:** Document the exact production publishing and custom domain binding steps (`quotes.oestergaard.com.au`) for the user.
