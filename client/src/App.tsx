@@ -8,6 +8,7 @@ import Home from "./pages/Home";
 import NewQuote from "./pages/NewQuote";
 import QuoteDetail from "./pages/QuoteDetail";
 import SupplierSettings from "./pages/SupplierSettings";
+import AuditDashboard from "./pages/AuditDashboard";
 
 function Router() {
   return (
@@ -16,6 +17,7 @@ function Router() {
       <Route path={"/quotes/new"} component={NewQuote} />
       <Route path={"/quotes/:id"} component={QuoteDetail} />
       <Route path={"/settings/suppliers"} component={SupplierSettings} />
+      <Route path={"/audit"} component={AuditDashboard} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
