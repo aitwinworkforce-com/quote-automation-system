@@ -180,3 +180,10 @@ Stale vite error in logs (SendQuoteDialog) is stale from 23:38 — file exists, 
   3. T&Cs Gate: Confirms Oestergaard + supplier T&Cs compliance via n8n Form.
 - **Output & Archiving:** Generates branded PDF via web app, uploads to SharePoint `/Oestergaard/Finalized/`, appends immutable row to Excel audit log (`/Oestergaard/AuditReviewLog.xlsx`).
 - **Parallel Transition:** Web app stays active on https://3000-i1uxoiqmyc8iogusya5hs-bca236da.sg1.manus.computer while n8n workflow processes SharePoint drop folder in parallel.
+
+## Power Automate troubleshooting — August 2026
+- User screenshot shows flow sequence: SharePoint When a file is created (properties only) -> Get file content -> Send an HTTP request to Azure DevOps -> Get items.
+- Diagnosis: first two actions are appropriate for SharePoint intake. Microsoft documentation confirms the properties-only trigger returns file properties and that Get file content with the file identifier is required before document analysis.
+- Main error: Send an HTTP request to Azure DevOps is the wrong connector for PDF extraction. It is for Azure DevOps REST APIs. Replace it with the Azure AI Document Intelligence (Form Recognizer) connector action "Analyze Document for Prebuilt or Custom models" (v3.x or v4.x API), using the SharePoint Get file content output.
+- Get items should be placed after extraction only if it is looking up SupplierRules from a SharePoint list; it is not an AI extraction step.
+- Sources verified: https://learn.microsoft.com/en-us/connectors/formrecognizer/ and https://learn.microsoft.com/en-us/sharepoint/dev/business-apps/power-automate/sharepoint-connector-actions-triggers
