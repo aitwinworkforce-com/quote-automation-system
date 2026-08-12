@@ -86,10 +86,12 @@ export default function NewQuote() {
   const [, navigate] = useLocation();
   const [step, setStep] = useState(1);
 
-  // Step 1 — upload
+  // Step 1 — upload & extraction progress
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [extractionStage, setExtractionStage] = useState<"idle" | "uploading" | "parsing" | "analyzing" | "complete" | "error">("idle");
+  const [extractionProgress, setExtractionProgress] = useState(0);
 
   // Created quote
   const [quoteId, setQuoteId] = useState<number | null>(null);
@@ -345,13 +347,32 @@ export default function NewQuote() {
                 }}
               >
                 {upload.isPending ? (
-                  <>
-                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                    <p className="font-medium">Extracting data with AI…</p>
-                    <p className="text-sm text-muted-foreground">
-                      Reading {fileName} — this usually takes 15–40 seconds.
-                    </p>
-                  </>
+                  <div className="flex w-full max-w-md flex-col items-center gap-4">
+                    <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+                      <Sparkles className="absolute -top-1 -right-1 h-5 w-5 animate-bounce text-primary" />
+                      <Loader2 className="h-8 w-8 animate-spin" />
+                    </div>
+                    <div className="w-full space-y-2 text-center">
+                      <div className="flex items-center justify-between text-sm font-medium text-foreground">
+                        <span>
+                          {extractionStage === "uploading" && "Uploading PDF to secure storage..."}
+                          {extractionStage === "parsing" && "Parsing document layout & structure..."}
+                          {extractionStage === "analyzing" && "Running AI extraction & supplier rule matching..."}
+                          {extractionStage === "complete" && "Extraction successful! Preparing review..."}
+                        </span>
+                        <span>{extractionProgress}%</span>
+                      </div>
+                      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                        <div
+                          className="h-full bg-primary transition-all duration-500 ease-out"
+                          style={{ width: `${extractionProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {fileName ? `Processing ${fileName} — please wait` : "Please wait while our intelligent agent analyzes the quotation..."}
+                      </p>
+                    </div>
+                  </div>
                 ) : (
                   <>
                     <FileText className="h-10 w-10 text-muted-foreground/60" />
