@@ -2,6 +2,7 @@ import { router, protectedProcedure } from "../_core/trpc";
 import { z } from "zod";
 import * as db from "../db";
 import { TRPCError } from "@trpc/server";
+import { invokeLLM } from "../_core/llm";
 
 export interface AuditFinding {
   id: string;
@@ -113,6 +114,51 @@ export const auditRouter = router({
 
     return findings;
   }),
+
+  getAiSuggestion: protectedProcedure
+    .input(z.object({
+      findingId: z.string(),
+      quoteId: z.number(),
+      type: z.string(),
+      title: z.string(),
+      description: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const quote = await db.getQuoteById(input.quoteId);
+      const items = await db.getQuoteLineItems(input.quoteId);
+
+      const prompt = `You are an expert AI quotation auditor for Oestergaard industrial equipment.
+Analyze the following quote finding and provide structured remediation advice:
+- Finding Title: ${input.title}
+- Finding Type: ${input.type}
+- Description: ${input.description}
+- Quote ID: ${input.quoteId}
+- Customer: ${quote?.customerName || "Unknown"}
+- Supplier: ${quote?.supplierName || "Unknown"}
+- Status: ${quote?.status || "unknown"}
+- Line Items Count: ${items.length}
+- Grand Total AUD: ${quote?.grandTotalAud || "N/A"}
+
+Return your analysis in clear, concise paragraphs covering:
+1. Root cause analysis of why this discrepancy occurred.
+2. Recommended step-by-step remediation action.
+3. Potential business impact if left unresolved.`;
+
+      try {
+        const response = await invokeLLM({
+          messages: [
+            { role: "system", content: "You are an expert quotation auditor. Provide clear, professional root cause analysis and remediation recommendations." },
+            { role: "user", content: prompt },
+          ],
+        });
+        const suggestionText = response.choices[0]?.message?.content || "No AI suggestion generated.";
+        return { suggestion: suggestionText };
+      } catch (err: any) {
+        return {
+          suggestion: `Standard Remediation Guidance:\n- Type: ${input.type}\n- Recommended Action: Review quote details at /quotes/${input.quoteId} and apply automated fix.`
+        };
+      }
+    }),
 
   fixFinding: protectedProcedure
     .input(z.object({

@@ -6,18 +6,34 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ShieldAlert, CheckCircle2, Wrench, Search, ArrowUpDown, RefreshCw, AlertTriangle, FileText, Clock, DollarSign } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ShieldAlert, CheckCircle2, Wrench, Search, ArrowUpDown, RefreshCw, AlertTriangle, FileText, Clock, DollarSign, Sparkles, Loader2 } from "lucide-react";
 import { Link } from "wouter";
 import { toast } from "sonner";
 
 export default function AuditDashboard() {
-
-  const utils = trpc.useUtils();
   const { data: findings = [], isLoading, refetch } = trpc.audit.getFindings.useQuery();
+
+  const [selectedFinding, setSelectedFinding] = useState<any | null>(null);
+  const [aiSuggestion, setAiSuggestion] = useState<string>("");
+  const [isAiLoading, setIsAiLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const suggestionMutation = trpc.audit.getAiSuggestion.useMutation({
+    onSuccess: (res) => {
+      setAiSuggestion(String(res.suggestion || ""));
+      setIsAiLoading(false);
+    },
+    onError: (err) => {
+      setAiSuggestion(`Error fetching AI suggestion: ${err.message}`);
+      setIsAiLoading(false);
+    }
+  });
 
   const fixMutation = trpc.audit.fixFinding.useMutation({
     onSuccess: (res) => {
       toast.success(res.message);
+      setIsModalOpen(false);
       refetch();
     },
     onError: (err) => {
@@ -69,16 +85,32 @@ export default function AuditDashboard() {
     };
   }, [findings]);
 
-  const handleFix = (finding: any) => {
-    let actionType: "fix_document" | "advance_workflow" | "confirm_fx" | "recompute_totals" = "fix_document";
-    if (finding.type === "missing_document") actionType = "fix_document";
-    if (finding.type === "stale_workflow") actionType = "advance_workflow";
-    if (finding.type === "missing_fx_stamp") actionType = "confirm_fx";
-    if (finding.type === "calculation_drift") actionType = "recompute_totals";
+  const openFixModal = (finding: any) => {
+    setSelectedFinding(finding);
+    setAiSuggestion("");
+    setIsAiLoading(true);
+    setIsModalOpen(true);
 
-    fixMutation.mutate({
+    suggestionMutation.mutate({
       findingId: finding.id,
       quoteId: finding.quoteId,
+      type: finding.type,
+      title: finding.title,
+      description: finding.description,
+    });
+  };
+
+  const handleExecuteFix = () => {
+    if (!selectedFinding) return;
+    let actionType: "fix_document" | "advance_workflow" | "confirm_fx" | "recompute_totals" = "fix_document";
+    if (selectedFinding.type === "missing_document") actionType = "fix_document";
+    if (selectedFinding.type === "stale_workflow") actionType = "advance_workflow";
+    if (selectedFinding.type === "missing_fx_stamp") actionType = "confirm_fx";
+    if (selectedFinding.type === "calculation_drift") actionType = "recompute_totals";
+
+    fixMutation.mutate({
+      findingId: selectedFinding.id,
+      quoteId: selectedFinding.quoteId,
       actionType,
     });
   };
@@ -215,7 +247,7 @@ export default function AuditDashboard() {
         <CardHeader>
           <CardTitle>Discrepancies & Audit Findings ({filteredAndSortedFindings.length})</CardTitle>
           <CardDescription>
-            Click "Fix Now" for automated remediation or inspect the quotation directly.
+            Click "Fix Now" for AI-powered root cause analysis and automated remediation.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -232,7 +264,6 @@ export default function AuditDashboard() {
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                TableHeader
                 <TableHeader>
                   <TableRow>
                     <TableHead>Severity</TableHead>
@@ -289,10 +320,9 @@ export default function AuditDashboard() {
                           <Button
                             size="sm"
                             className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
-                            onClick={() => handleFix(finding)}
-                            disabled={fixMutation.isPending}
+                            onClick={() => openFixModal(finding)}
                           >
-                            <Wrench className="w-3.5 h-3.5" />
+                            <Sparkles className="w-3.5 h-3.5" />
                             Fix Now
                           </Button>
                         </div>
@@ -305,6 +335,65 @@ export default function AuditDashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* AI Remediation Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Sparkles className="w-5 h-5 text-indigo-600" />
+              AI Remediation & Root Cause Analysis
+            </DialogTitle>
+            <DialogDescription>
+              Review the AI assistant's diagnosis and recommended remediation steps before applying automated fixes.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedFinding && (
+            <div className="space-y-4 my-2">
+              <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-semibold text-slate-900">{selectedFinding.title}</span>
+                  <Badge variant="outline" className="capitalize">{selectedFinding.severity} priority</Badge>
+                </div>
+                <p className="text-sm text-slate-700">{selectedFinding.description}</p>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold text-slate-900 flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4 text-indigo-500" />
+                  AI Intelligence & Suggestions
+                </h4>
+                {isAiLoading ? (
+                  <div className="p-8 rounded-lg border border-dashed border-slate-300 flex flex-col items-center justify-center text-muted-foreground gap-3 bg-white">
+                    <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
+                    <p className="text-sm">Analyzing quotation records and formulating recommendations...</p>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-lg bg-indigo-50/50 border border-indigo-100 text-sm text-slate-800 whitespace-pre-line leading-relaxed">
+                    {aiSuggestion}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2"
+              onClick={handleExecuteFix}
+              disabled={fixMutation.isPending || isAiLoading}
+            >
+              {fixMutation.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+              <Wrench className="w-4 h-4" />
+              Apply Automated Fix
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
