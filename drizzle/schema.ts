@@ -178,3 +178,20 @@ export const quoteEmailLog = mysqlTable("quoteEmailLog", {
 
 export type QuoteEmailLogEntry = typeof quoteEmailLog.$inferSelect;
 export type InsertQuoteEmailLogEntry = typeof quoteEmailLog.$inferInsert;
+
+/**
+ * Feedback ratings on AI audit remediation suggestions.
+ */
+export const auditFeedback = mysqlTable("auditFeedback", {
+  id: int("id").autoincrement().primaryKey(),
+  findingId: varchar("findingId", { length: 128 }).notNull(),
+  quoteId: int("quoteId").notNull(),
+  userId: int("userId").notNull(),
+  userName: varchar("userName", { length: 255 }),
+  rating: mysqlEnum("rating", ["useful", "not_useful"]).notNull(),
+  comment: text("comment"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AuditFeedbackEntry = typeof auditFeedback.$inferSelect;
+export type InsertAuditFeedbackEntry = typeof auditFeedback.$inferInsert;
