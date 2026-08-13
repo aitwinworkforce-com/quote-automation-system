@@ -125,6 +125,8 @@ export interface CostingInput {
   /** Exchange rate expressed as AUD→foreign (e.g. AUD/EUR = 0.61 → 1 AUD buys 0.61 EUR). */
   exchangeRate: number;
   currency: "EUR" | "USD" | "AUD";
+  /** Optional currency exchange markdown % (e.g. 2%). */
+  currencyMarkdownPct?: number;
   freightCostAud?: number;
   installationCostAud?: number;
   otherLocalCostAud?: number;
@@ -190,8 +192,10 @@ export function calculateCosting(input: CostingInput): CostingResult {
   const totalSellForeign = round2(costedItems.reduce((s, i) => s + i.sellTotalPrice, 0));
 
   // Convert to AUD. Rate is AUD→foreign (e.g. 0.61 EUR per AUD), so AUD = foreign / rate.
+  const markdown = input.currencyMarkdownPct ?? 0;
+  const effectiveRate = markdown > 0 ? input.exchangeRate * (1 - markdown / 100) : input.exchangeRate;
   const totalSellAud =
-    input.currency === "AUD" ? totalSellForeign : round2(totalSellForeign / input.exchangeRate);
+    input.currency === "AUD" ? totalSellForeign : round2(totalSellForeign / effectiveRate);
 
   const freightCostAud = round2(input.freightCostAud ?? 0);
   const installationCostAud = round2(input.installationCostAud ?? 0);

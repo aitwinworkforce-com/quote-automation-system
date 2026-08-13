@@ -128,3 +128,16 @@ describe("calculateCosting", () => {
     expect(result.grandTotalAud).toBe(2000);
   });
 });
+
+  it("applies 2% currency exchange markdown when specified", () => {
+    const result = calculateCosting({
+      lineItems: [{ description: "Test Item", quantity: 1, listUnitPrice: 100 }],
+      pricingModel: "as_is",
+      marginPct: 0,
+      exchangeRate: 1.0,
+      currency: "EUR",
+      currencyMarkdownPct: 2,
+    });
+    // Effective rate = 1.0 * 0.98 = 0.98. 100 / 0.98 = 102.04
+    expect(result.totalSellAud).toBeCloseTo(102.04, 2);
+  });
