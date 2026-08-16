@@ -171,8 +171,18 @@ export default function NewQuote() {
       setSupplierName(res.matchedSupplier?.name ?? ex.supplier_name ?? "");
       setMatchedSupplierName(res.matchedSupplier?.name ?? null);
       setPricingModel(res.matchedSupplier?.pricingModel ?? "as_is");
+      // Auto-fill from verified supplier reference index
+      if (res.supplierDefaults) {
+        const sd = res.supplierDefaults;
+        setMarginPct(String(sd.marginPct));
+        setCurrency(sd.currency as "EUR" | "USD" | "AUD");
+        if (sd.discountPct > 0 && !ex.distribution_discount_pct) {
+          setDistributionDiscountPct(String(sd.discountPct));
+        }
+      }
       setSupplierQuoteRef(ex.supplier_quote_number ?? "");
-      setCurrency((ex.currency as "EUR" | "USD" | "AUD") ?? "EUR");
+      // Currency from extraction overrides reference if present
+      if (ex.currency) setCurrency(ex.currency as "EUR" | "USD" | "AUD");
       setCustomerName(ex.customer_name ?? "");
       setCustomerContact(ex.customer_contact ?? "");
       setCustomerAddress(ex.customer_address ?? "");

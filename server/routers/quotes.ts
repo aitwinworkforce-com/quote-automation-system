@@ -107,6 +107,7 @@ export const quotesRouter = router({
         quoteId,
         extracted,
         matchedSupplier: matched ?? null,
+        supplierDefaults: getSupplierDefaults(matched?.name ?? extracted.supplier_name),
       };
     }),
 
@@ -304,3 +305,4 @@ export const quotesRouter = router({
     return { success: true };
   }),
 });
+import { getSupplierDefaults } from "../supplierReference";
