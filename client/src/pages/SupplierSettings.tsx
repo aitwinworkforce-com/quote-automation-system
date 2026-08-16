@@ -328,6 +328,9 @@ export default function SupplierSettings() {
 
         {/* Bulk Product Image Upload */}
         {isAdmin && suppliers && <BulkImageUpload suppliers={(suppliers as any[]).map(s => ({ id: s.id, name: s.name }))} />}
+
+        {/* Existing Product Images Gallery */}
+        {isAdmin && suppliers && <ProductImageGallery suppliers={(suppliers as any[]).map(s => ({ id: s.id, name: s.name }))} />}
       </main>
     </div>
   );
@@ -545,4 +548,90 @@ function fileToBase64(file: File): Promise<string> {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
+}
+
+// ---------------------------------------------------------------------------
+// Product Image Gallery Component
+// ---------------------------------------------------------------------------
+function ProductImageGallery({ suppliers }: { suppliers: Array<{ id: number; name: string }> }) {
+  const [filterSupplier, setFilterSupplier] = useState<string>("");
+  const { data: images, refetch } = trpc.productImages.list.useQuery(
+    filterSupplier && filterSupplier !== "all" ? { supplierId: Number(filterSupplier) } : undefined
+  );
+  const deleteMutation = trpc.productImages.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Image deleted");
+      void refetch();
+    },
+    onError: () => toast.error("Failed to delete image"),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Image className="h-5 w-5 text-emerald-600" />
+          Existing Product Images
+        </CardTitle>
+        <CardDescription>
+          {images?.length ?? 0} image{(images?.length ?? 0) !== 1 ? "s" : ""} in the library.
+          These are matched to quotation PDFs during the Image Preview step.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Filter by supplier */}
+        <div className="grid gap-2 sm:max-w-xs">
+          <Label className="text-sm font-medium">Filter by supplier</Label>
+          <Select value={filterSupplier} onValueChange={setFilterSupplier}>
+            <SelectTrigger><SelectValue placeholder="All suppliers" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All suppliers</SelectItem>
+              {suppliers.map(s => (
+                <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Image grid */}
+        {(!images || images.length === 0) ? (
+          <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
+            <Image className="mx-auto h-10 w-10 opacity-40" />
+            <p className="mt-2 text-sm">No product images uploaded yet.</p>
+            <p className="text-xs">Use the uploader above to add images.</p>
+          </div>
+        ) : (
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {images.map((img: any) => (
+              <div key={img.id} className="group relative rounded-lg border p-3">
+                <img
+                  src={img.imageUrl}
+                  alt={img.productName || img.productModel}
+                  className="h-28 w-full rounded object-contain bg-white"
+                />
+                <div className="mt-2 space-y-0.5">
+                  <p className="text-sm font-semibold truncate">{img.productModel}</p>
+                  {img.productName && <p className="text-xs text-muted-foreground truncate">{img.productName}</p>}
+                  <p className="text-xs text-muted-foreground">{img.supplierName} · {img.sourceType}</p>
+                  {img.tags && <p className="text-xs text-blue-600 truncate">{img.tags}</p>}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive"
+                  onClick={() => {
+                    if (confirm("Delete this product image?")) {
+                      deleteMutation.mutate({ id: img.id });
+                    }
+                  }}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }

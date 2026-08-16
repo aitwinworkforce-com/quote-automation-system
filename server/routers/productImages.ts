@@ -96,6 +96,14 @@ export const productImagesRouter = router({
       return { matched: false, image: null, source: "none" };
     }),
 
+  // Delete a product image (admin)
+  delete: adminProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      await (await getDb())!.delete(productImages).where(eq(productImages.id, input.id));
+      return { success: true };
+    }),
+
   // Scrape a supplier website for product images (admin, manual trigger)
   scrape: adminProcedure
     .input(z.object({
