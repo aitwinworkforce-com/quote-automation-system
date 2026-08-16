@@ -262,75 +262,58 @@ export default function AuditDashboard() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Severity</TableHead>
-                    <TableHead>Quote / Ref</TableHead>
-                    <TableHead>Customer / Supplier</TableHead>
-                    <TableHead>Issue Type</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAndSortedFindings.map((finding) => (
-                    <TableRow key={finding.id} className="hover:bg-slate-50/50">
-                      <TableCell>
-                        <Badge
-                          variant={
-                            finding.severity === "critical"
-                              ? "destructive"
-                              : finding.severity === "high"
-                              ? "default"
-                              : "secondary"
-                          }
-                          className="capitalize"
-                        >
-                          {finding.severity}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        <Link href={`/quotes/${finding.quoteId}`} className="text-blue-600 hover:underline">
-                          {finding.salesforceNumber || `Quote #${finding.quoteId}`}
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-medium">{finding.customerName || "Unassigned Customer"}</div>
-                        <div className="text-xs text-muted-foreground">{finding.supplierName || "General"}</div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5 font-medium text-slate-800">
-                          {finding.type === "calculation_drift" && <DollarSign className="w-4 h-4 text-red-600" />}
-                          {finding.type === "missing_document" && <FileText className="w-4 h-4 text-amber-600" />}
-                          {finding.type === "missing_fx_stamp" && <AlertTriangle className="w-4 h-4 text-amber-600" />}
-                          {finding.type === "stale_workflow" && <Clock className="w-4 h-4 text-blue-600" />}
-                          {finding.title}
-                        </div>
-                      </TableCell>
-                      <TableCell className="max-w-md text-sm text-muted-foreground">
-                        {finding.description}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Link href={`/quotes/${finding.quoteId}`}>
-                            <Button variant="outline" size="sm">Inspect</Button>
-                          </Link>
-                          <Button
-                            size="sm"
-                            className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5"
-                            onClick={() => openFixModal(finding)}
-                          >
-                            <Sparkles className="w-3.5 h-3.5" />
-                            Fix Now
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="space-y-3">
+              {filteredAndSortedFindings.map((finding) => (
+                <div
+                  key={finding.id}
+                  className="flex items-start gap-4 p-4 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50/50 transition-colors"
+                >
+                  {/* Severity indicator */}
+                  <div className="flex-shrink-0 pt-0.5">
+                    {finding.severity === "critical" && <div className="w-3 h-3 rounded-full bg-red-500" />}
+                    {finding.severity === "high" && <div className="w-3 h-3 rounded-full bg-amber-500" />}
+                    {finding.severity === "medium" && <div className="w-3 h-3 rounded-full bg-blue-400" />}
+                    {finding.severity === "low" && <div className="w-3 h-3 rounded-full bg-slate-300" />}
+                  </div>
+
+                  {/* Main content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-sm text-slate-900 truncate">{finding.title}</span>
+                      <Badge variant="outline" className="text-[10px] capitalize flex-shrink-0">
+                        {finding.severity}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-slate-600 line-clamp-1 mb-2">
+                      {finding.description}
+                    </p>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <Link href={`/quotes/${finding.quoteId}`} className="text-blue-600 hover:underline font-medium">
+                        {finding.salesforceNumber || `#${finding.quoteId}`}
+                      </Link>
+                      {finding.customerName && <span>{finding.customerName}</span>}
+                      {finding.supplierName && <span className="text-slate-400">• {finding.supplierName}</span>}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <Link href={`/quotes/${finding.quoteId}`}>
+                      <Button variant="ghost" size="sm" className="text-xs">
+                        Inspect
+                      </Button>
+                    </Link>
+                    <Button
+                      size="sm"
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1.5 text-xs"
+                      onClick={() => openFixModal(finding)}
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      Fix Now
+                    </Button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>
