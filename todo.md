@@ -68,8 +68,10 @@
 - [x] Deterministic accuracy scoring engine (server/accuracy.ts) — 10 weighted checks, 0-100% score
 - [x] Accuracy unit tests (7 scenarios: perfect 100%, drift, missing FX, missing markdown, missing PDF, cumulative deductions, 0%)
 - [x] tRPC endpoint audit.scoreQuote for per-quote accuracy retrieval — 37/37 tests pass
-- [ ] Supplier commission calculations from Supplierscommission.xlsx
-- [ ] QuotationTEMPLATE.docx output alignment
-- [ ] Automatic re-scoring on rule changes
-- [ ] Executive accuracy trend widget on dashboard
+- [x] Supplier commission module (server/commission.ts) — 17 suppliers, 11 unit tests passing
+- [x] Quotation template constants (server/quotationTemplate.ts) — exact structure from QuotationTEMPLATE.docx
+- [x] AccuracyBadge component added to Home.tsx
+- [ ] Wire commission into live pricing workflow and persist on quotes
+- [ ] Wire quotationTemplate into PDF generator and verify output
+- [ ] Render AccuracyBadge in dashboard table rows and verify in browser
 - [ ] Opportunity-by-supplier reporting page

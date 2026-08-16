@@ -266,3 +266,13 @@ export default function Home() {
   }
   return isAuthenticated ? <Dashboard /> : <LandingHero />;
 }
+function AccuracyBadge({ quoteId }: { quoteId: number }) {
+  const { data } = trpc.audit.scoreQuote.useQuery({ quoteId });
+  if (!data) return null;
+  const color = data.score >= 90 ? "text-green-700 bg-green-50" : data.score >= 70 ? "text-amber-700 bg-amber-50" : "text-red-700 bg-red-50";
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${color}`}>
+      {data.score}%
+    </span>
+  );
+}
