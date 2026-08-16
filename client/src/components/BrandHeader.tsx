@@ -28,6 +28,12 @@ export function BrandHeader() {
               </Link>
             </Button>
             <Button variant="ghost" size="sm" asChild>
+              <Link href="/reports/suppliers">
+                <BarChart3 className="h-4 w-4" />
+                <span className="hidden sm:inline">Reports</span>
+              </Link>
+            </Button>
+            <Button variant="ghost" size="sm" asChild>
               <Link href="/settings/suppliers">
                 <Settings className="h-4 w-4" />
                 <span className="hidden sm:inline">Suppliers</span>
@@ -44,3 +50,4 @@ export function BrandHeader() {
     </header>
   );
 }
+import { BarChart3 } from "lucide-react";

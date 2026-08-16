@@ -4,6 +4,7 @@ import * as db from "../db";
 import { fetchLiveRates } from "../exchangeRate";
 import { extractQuoteFromPdf } from "../extraction";
 import { calculateCosting, type PricingModel } from "../pricing";
+import { getSupplierCommission } from "../commission";
 import { storagePut } from "../storage";
 import { protectedProcedure, router } from "../_core/trpc";
 
@@ -173,6 +174,9 @@ export const quotesRouter = router({
       const supplier = quote.supplierId ? await db.getSupplierById(quote.supplierId) : undefined;
       const pricingModel: PricingModel = (supplier?.pricingModel as PricingModel) ?? "as_is";
 
+      // Look up supplier commission from authoritative table
+      const commission = quote.supplierName ? getSupplierCommission(quote.supplierName) : null;
+
       const result = calculateCosting({
         lineItems: input.lineItems,
         pricingModel,
@@ -181,10 +185,15 @@ export const quotesRouter = router({
         marginPct: input.marginPct,
         exchangeRate: Number(quote.exchangeRate),
         currency: (quote.supplierCurrency as "EUR" | "USD" | "AUD") ?? "EUR",
+        currencyMarkdownPct: 2,
         freightCostAud: input.freightCostAud,
         installationCostAud: input.installationCostAud,
         otherLocalCostAud: input.otherLocalCostAud,
       });
+
+      // Calculate commission amount for audit
+      const commissionPct = commission?.commissionPct ?? 0;
+      const commissionAmount = result.totalCostForeign * (commissionPct / 100);
 
       await db.updateQuote(input.quoteId, {
         status: "costed",
@@ -214,7 +223,12 @@ export const quotesRouter = router({
         })),
       );
 
-      return result;
+      return {
+        ...result,
+        commissionPct,
+        commissionAmount: Math.round((commissionAmount + Number.EPSILON) * 100) / 100,
+        commissionSupplier: commission?.supplierName ?? null,
+      };
     }),
 
   // ------------------------------------------------------------------

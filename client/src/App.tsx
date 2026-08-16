@@ -18,6 +18,7 @@ function Router() {
       <Route path={"/quotes/:id"} component={QuoteDetail} />
       <Route path={"/settings/suppliers"} component={SupplierSettings} />
       <Route path={"/audit"} component={AuditDashboard} />
+      <Route path={"/reports/suppliers"} component={OpportunityBySupplier} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -47,3 +48,4 @@ function App() {
 }
 
 export default App;
+import OpportunityBySupplier from "./pages/OpportunityBySupplier";

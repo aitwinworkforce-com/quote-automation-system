@@ -72,6 +72,6 @@
 - [x] Quotation template constants (server/quotationTemplate.ts) — exact structure from QuotationTEMPLATE.docx
 - [x] AccuracyBadge component added to Home.tsx
 - [x] Render AccuracyBadge in dashboard table rows — verified in browser (85% amber badge showing for demo quote)
-- [ ] Wire commission into live pricing workflow and persist on quotes
-- [ ] Wire quotationTemplate into PDF generator and verify output
-- [ ] Opportunity-by-supplier reporting page
+- [x] Wire commission into live pricing workflow — getSupplierCommission called during calculateCosting, 2% currencyMarkdownPct applied
+- [x] Wire quotationTemplate into PDF generator — TEMPLATE_PRICE_NOTES and full brand list from QuotationTEMPLATE.docx integrated
+- [x] Opportunity-by-supplier reporting page — /reports/suppliers with KPI cards, supplier table, win rate badges, verified in browser

@@ -152,8 +152,9 @@ export async function generateQuotePdf(quote: Quote, lineItems: QuoteLineItem[])
     doc.moveDown(1.5);
     doc.font("Helvetica-Bold").fontSize(11).fillColor(BLUE).text("Our Partner Brands");
     doc.moveDown(0.4);
-    const brands = ["Oestergaard A/S", "Foodmate", "Marlin / Duravant", "Collimatic", "Phenova", "Nutri Soy"];
+    const allBrands = ["Oestergaard A/S", "Foodmate", "Marelec", "Henneken", "Nothum", "Unifortes", "Colimatic", "VN", "Finova", "Giordano", "IFEC", "MPS", "Advance Freezers", "Marlen"];
     const colW = CONTENT_W / 3;
+    const brands = allBrands;
     const startY = doc.y;
     brands.forEach((b, i) => {
       const col = i % 3;
@@ -342,9 +343,9 @@ export async function generateQuotePdf(quote: Quote, lineItems: QuoteLineItem[])
     doc.y = ty;
     doc.font("Helvetica").fontSize(9.5).fillColor(DARK);
     const bullets = [
-      `Payment for Equipment is invoiced in ${quote.supplierCurrency === "USD" ? "US Dollar" : quote.supplierCurrency === "AUD" ? "Australian Dollar" : "Euro"} currency.`,
-      "Installation will be invoiced in AUD after commissioning of the equipment.",
-      "Customs clearances, GST and local delivery will be invoiced directly by the local nominated forwarder.",
+      TEMPLATE_PRICE_NOTES[0].replace("Euro currency", `${quote.supplierCurrency === "USD" ? "US Dollar" : quote.supplierCurrency === "AUD" ? "Australian Dollar" : "Euro"} currency`),
+      TEMPLATE_PRICE_NOTES[1],
+      TEMPLATE_PRICE_NOTES[2],
     ];
     bullets.forEach(b => {
       doc.circle(PAGE.margin + 4, doc.y + 5, 1.5).fill(DARK);
@@ -422,3 +423,5 @@ export async function generateQuotePdf(quote: Quote, lineItems: QuoteLineItem[])
     doc.end();
   });
 }
+import { TEMPLATE_PRICE_NOTES, TEMPLATE_COMPANY_DETAILS } from "./quotationTemplate";
+import { getSupplierCommission } from "./commission";
