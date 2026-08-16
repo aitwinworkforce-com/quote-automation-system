@@ -20,7 +20,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, Loader2, Pencil, Plus, ShieldAlert } from "lucide-react";
+import { ArrowLeft, CloudUpload, Image, Loader2, Pencil, Plus, ShieldAlert, Trash2, X } from "lucide-react";
 
 const PRICING_MODELS = [
   { value: "net_price", label: "Net price (quote already at cost)" },
@@ -325,7 +325,224 @@ export default function SupplierSettings() {
             </Table>
           </CardContent>
         </Card>
+
+        {/* Bulk Product Image Upload */}
+        {isAdmin && suppliers && <BulkImageUpload suppliers={(suppliers as any[]).map(s => ({ id: s.id, name: s.name }))} />}
       </main>
     </div>
   );
+}
+
+// ---------------------------------------------------------------------------
+// Bulk Image Upload Component
+// ---------------------------------------------------------------------------
+interface PendingImage {
+  file: File;
+  preview: string;
+  productModel: string;
+  productName: string;
+  tags: string;
+}
+
+function BulkImageUpload({ suppliers }: { suppliers: Array<{ id: number; name: string }> }) {
+  const [selectedSupplier, setSelectedSupplier] = useState<{ id: number; name: string } | null>(null);
+  const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const uploadMutation = trpc.productImages.upload.useMutation();
+
+  const handleFilesDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith("image/"));
+    addFiles(files);
+  };
+
+  const handleFilesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).filter(f => f.type.startsWith("image/"));
+    addFiles(files);
+  };
+
+  const addFiles = (files: File[]) => {
+    const newImages: PendingImage[] = files.map(file => ({
+      file,
+      preview: URL.createObjectURL(file),
+      productModel: file.name.replace(/\.[^.]+$/, "").replace(/[-_]/g, " "),
+      productName: "",
+      tags: "",
+    }));
+    setPendingImages(prev => [...prev, ...newImages]);
+  };
+
+  const removeImage = (index: number) => {
+    setPendingImages(prev => {
+      const copy = [...prev];
+      URL.revokeObjectURL(copy[index].preview);
+      copy.splice(index, 1);
+      return copy;
+    });
+  };
+
+  const updateImage = (index: number, field: keyof PendingImage, value: string) => {
+    setPendingImages(prev => {
+      const copy = [...prev];
+      (copy[index] as any)[field] = value;
+      return copy;
+    });
+  };
+
+  const handleBulkUpload = async () => {
+    if (!selectedSupplier || pendingImages.length === 0) return;
+    setUploading(true);
+    setUploadProgress(0);
+
+    let completed = 0;
+    for (const img of pendingImages) {
+      try {
+        const base64 = await fileToBase64(img.file);
+        await uploadMutation.mutateAsync({
+          supplierId: selectedSupplier.id,
+          supplierName: selectedSupplier.name,
+          productModel: img.productModel || img.file.name,
+          productName: img.productName || undefined,
+          tags: img.tags || undefined,
+          fileBase64: base64,
+          fileName: img.file.name,
+        });
+      } catch (err) {
+        toast.error(`Failed to upload ${img.file.name}`);
+      }
+      completed++;
+      setUploadProgress(Math.round((completed / pendingImages.length) * 100));
+    }
+
+    toast.success(`${completed} image${completed !== 1 ? "s" : ""} uploaded successfully`);
+    setPendingImages([]);
+    setUploading(false);
+    setUploadProgress(0);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Image className="h-5 w-5 text-blue-600" />
+          Product Image Library
+        </CardTitle>
+        <CardDescription>
+          Upload product catalogue images for quotation PDFs. Drag and drop multiple files,
+          assign a supplier, and add model names for accurate matching.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {/* Supplier selector */}
+        <div className="grid gap-2 sm:max-w-xs">
+          <Label className="font-semibold">Select supplier</Label>
+          <Select
+            value={selectedSupplier?.id?.toString() ?? ""}
+            onValueChange={v => {
+              const s = suppliers.find(s => s.id === Number(v));
+              setSelectedSupplier(s ? { id: s.id, name: s.name } : null);
+            }}
+          >
+            <SelectTrigger><SelectValue placeholder="Choose a supplier..." /></SelectTrigger>
+            <SelectContent>
+              {suppliers.map(s => (
+                <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Drop zone */}
+        <div
+          onDragOver={e => e.preventDefault()}
+          onDrop={handleFilesDrop}
+          className="flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/30 p-6 transition hover:border-primary/50 hover:bg-muted/50"
+          onClick={() => document.getElementById("bulk-image-input")?.click()}
+        >
+          <CloudUpload className="h-8 w-8 text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">
+            Drag & drop product images here, or <span className="font-semibold text-primary">click to browse</span>
+          </p>
+          <p className="text-xs text-muted-foreground">PNG, JPG, WebP — multiple files supported</p>
+          <input
+            id="bulk-image-input"
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={handleFilesSelect}
+          />
+        </div>
+
+        {/* Pending images list */}
+        {pendingImages.length > 0 && (
+          <div className="space-y-3">
+            <p className="text-sm font-semibold">{pendingImages.length} image{pendingImages.length !== 1 ? "s" : ""} ready to upload</p>
+            <div className="max-h-[400px] space-y-2 overflow-y-auto">
+              {pendingImages.map((img, i) => (
+                <div key={i} className="flex items-start gap-3 rounded-lg border p-3">
+                  <img src={img.preview} alt="" className="h-16 w-16 shrink-0 rounded object-contain border bg-white" />
+                  <div className="flex-1 space-y-1.5">
+                    <Input
+                      placeholder="Product model (e.g. HVM650)"
+                      value={img.productModel}
+                      onChange={e => updateImage(i, "productModel", e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                    <Input
+                      placeholder="Product name (optional)"
+                      value={img.productName}
+                      onChange={e => updateImage(i, "productName", e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                    <Input
+                      placeholder="Tags (comma-separated, e.g. mixer, brine, tumbler)"
+                      value={img.tags}
+                      onChange={e => updateImage(i, "tags", e.target.value)}
+                      className="h-8 text-sm"
+                    />
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => removeImage(i)} className="shrink-0">
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
+            {/* Upload progress */}
+            {uploading && (
+              <div className="space-y-1">
+                <div className="h-2 w-full rounded-full bg-muted">
+                  <div className="h-2 rounded-full bg-primary transition-all" style={{ width: `${uploadProgress}%` }} />
+                </div>
+                <p className="text-xs text-muted-foreground">{uploadProgress}% complete</p>
+              </div>
+            )}
+
+            <Button
+              onClick={handleBulkUpload}
+              disabled={!selectedSupplier || uploading}
+              className="w-full"
+            >
+              {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CloudUpload className="h-4 w-4" />}
+              {uploading ? `Uploading...` : `Upload ${pendingImages.length} image${pendingImages.length !== 1 ? "s" : ""} to ${selectedSupplier?.name || "..."}`}
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      resolve(result.split(",")[1]); // strip data:image/...;base64, prefix
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
