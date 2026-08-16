@@ -207,6 +207,7 @@ function Dashboard() {
                     <TableHead>Date</TableHead>
                     <TableHead>Total (AUD)</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Accuracy</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -243,6 +244,9 @@ function Dashboard() {
                       <TableCell>
                         <StatusBadge status={q.status} />
                       </TableCell>
+                      <TableCell>
+                        <AccuracyBadge quoteId={q.id} />
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -267,8 +271,9 @@ export default function Home() {
   return isAuthenticated ? <Dashboard /> : <LandingHero />;
 }
 function AccuracyBadge({ quoteId }: { quoteId: number }) {
-  const { data } = trpc.audit.scoreQuote.useQuery({ quoteId });
-  if (!data) return null;
+  const { data, isLoading, isError } = trpc.audit.scoreQuote.useQuery({ quoteId });
+  if (isLoading) return <span className="inline-block h-5 w-10 animate-pulse rounded bg-muted" />;
+  if (isError || !data) return <span className="text-xs text-muted-foreground">—</span>;
   const color = data.score >= 90 ? "text-green-700 bg-green-50" : data.score >= 70 ? "text-amber-700 bg-amber-50" : "text-red-700 bg-red-50";
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${color}`}>

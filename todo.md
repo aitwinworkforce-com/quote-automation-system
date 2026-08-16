@@ -71,7 +71,7 @@
 - [x] Supplier commission module (server/commission.ts) — 17 suppliers, 11 unit tests passing
 - [x] Quotation template constants (server/quotationTemplate.ts) — exact structure from QuotationTEMPLATE.docx
 - [x] AccuracyBadge component added to Home.tsx
+- [x] Render AccuracyBadge in dashboard table rows — verified in browser (85% amber badge showing for demo quote)
 - [ ] Wire commission into live pricing workflow and persist on quotes
 - [ ] Wire quotationTemplate into PDF generator and verify output
-- [ ] Render AccuracyBadge in dashboard table rows and verify in browser
 - [ ] Opportunity-by-supplier reporting page
