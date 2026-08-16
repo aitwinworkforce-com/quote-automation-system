@@ -1,0 +1,212 @@
+{
+  "metadata": {
+    "source": "Oestergaard supplier data upload 16 Aug 2026",
+    "description": "Authoritative supplier commission, pricing model, FX rates, and costing formula reference",
+    "version": "1.0.0"
+  },
+  "suppliers": [
+    { "name": "Beritech", "discount": "15% / 25% / 30% (by product)", "pricingModel": "list_minus_distribution", "currency": "EUR" },
+    { "name": "BMB S.R.L.", "discount": "20%", "pricingModel": "list_minus_distribution", "currency": "EUR" },
+    { "name": "Colimatic", "discount": "25%", "pricingModel": "net_price", "currency": "EUR" },
+    { "name": "Foodmate", "discount": "20%", "pricingModel": "as_is", "currency": "EUR" },
+    { "name": "Finova", "discount": "15%", "pricingModel": "list_minus_distribution", "currency": "EUR" },
+    { "name": "GPI Group", "discount": "20%", "pricingModel": "list_minus_distribution", "currency": "EUR" },
+    { "name": "Heinen", "discount": "20%", "pricingModel": "list_minus_distribution", "currency": "EUR" },
+    { "name": "Henneken", "discount": "20%", "pricingModel": "list_minus_distribution", "currency": "EUR" },
+    { "name": "Marelec", "discount": "20%", "pricingModel": "list_minus_distribution", "currency": "EUR" },
+    { "name": "Marlen", "discount": "20%", "pricingModel": "list_minus_distribution", "currency": "EUR" },
+    { "name": "MPS", "discount": "20%", "pricingModel": "list_minus_distribution", "currency": "EUR" },
+    { "name": "Nothum", "discount": "12.5% commission", "pricingModel": "commission_based", "currency": "USD" },
+    { "name": "Oestergaard", "discount": "10%", "pricingModel": "list_minus_distribution", "currency": "EUR" },
+    { "name": "PSS", "discount": "20%", "pricingModel": "list_minus_distribution", "currency": "EUR" },
+    { "name": "TECNOVAC", "discount": "20%", "pricingModel": "list_minus_distribution", "currency": "EUR" },
+    { "name": "Unifortes", "discount": "20%", "pricingModel": "list_minus_distribution", "currency": "EUR" },
+    { "name": "Qupaq", "discount": "20%", "pricingModel": "list_minus_distribution", "currency": "EUR" }
+  ],
+  "costingFormula": {
+    "description": "From Oestergaard_Project_Costing_Tool.xlsx Machines sheet R28, cross-validated against 5 real costing workbooks",
+    "sellPrice": "Net Cost / (1 - GM%)",
+    "defaultGM": 0.20,
+    "alternativeGM": 0.25,
+    "fxMarkdown": 0.02,
+    "shippingAdminFee": 0.05,
+    "optionA": "Supplier quotes net cost directly (no list price) → Cost = Supplier Price",
+    "optionB": "Supplier quotes list price → Cost = List Price × (1 - Supplier Discount %)",
+    "verification": {
+      "henneken_25pct": "List €24,090 × Qty 2 × 0.75 = €36,135 purchase → /0.75 = €48,180 WRONG → /(1-0.25) = €45,168.75 ✓ — divisor 0.75 means 25% margin on sell",
+      "henneken_30pct": "List €24,090 × Qty 2 × 0.70 = €33,726 purchase → /0.75 = €44,968 ✓",
+      "foodmate_kfc": "Supplier €103,760 × 0.8 = €83,008 purchase → /0.7 = €118,583 sell (30% margin on sell) ✓",
+      "steen_turks": "Quote €29,662.40 / 0.75 = €39,549.87 sell → /0.59 FX = AUD $71,782.92 ✓",
+      "mps_fasta_pasta": "Machines Cost AUD $103,667 → Sell $141,722 (26.85% GM); Project Total $159,884 (24.2% blended) ✓"
+    }
+  },
+  "verifiedPricingModels": {
+    "henneken": {
+      "supplierDiscount": "Equipment Discount column says 20%, but workbook uses 25% (0.75 factor) and 30% (0.70 factor) tiers",
+      "marginOnSell": 0.25,
+      "marginDivisor": 0.75,
+      "formula": "Sell = (List × Qty × DiscountFactor) / (1 - MarginPct)",
+      "note": "Discount factor and margin are BOTH expressed as divisors in the workbook — 0.75 discount means 25% OFF list, 0.75 margin means 25% margin ON sell"
+    },
+    "foodmate": {
+      "purchaseFactor": 0.80,
+      "marginDivisor": 0.70,
+      "marginOnSell": 0.30,
+      "formula": "Purchase = SupplierPrice × 0.8; Sell = Purchase / 0.7",
+      "note": "Foodmate quotes are already net-to-Oestergaard at 20% discount; margin is 30% on sell price"
+    },
+    "steen": {
+      "marginDivisor": 0.75,
+      "marginOnSell": 0.25,
+      "formula": "Sell(EUR) = SupplierQuote / 0.75; Sell(AUD) = Sell(EUR) / FXrate",
+      "fxConvention": "FX rate expressed as AUD-per-EUR (e.g. 0.59 means 1 AUD = 0.59 EUR)"
+    },
+    "mps": {
+      "marginOnSell": "variable (26.85% on machines in QU8478)",
+      "formula": "Uses full Project Costing Tool with Machines + Services + Shipping sheets",
+      "shippingAdminFee": 0.05,
+      "note": "MPS quotes use the standardized multi-sheet costing tool with labour rates and shipping"
+    },
+    "colimatic": {
+      "supplierDiscount": "25% (net price model)",
+      "pricingModel": "net_price",
+      "note": "Colimatic quotes net cost directly — no list price conversion needed"
+    },
+    "marelec": {
+      "supplierDiscount": "20%",
+      "pricingModel": "list_minus_distribution",
+      "note": "Marelec confirmed as genuine Oestergaard-represented brand"
+    }
+  },
+  "exchangeRates": {
+    "source": "Rates sheet — manual update from xe.com/RBA before quoting",
+    "EUR": 1.0,
+    "AUD": 0.6,
+    "USD": 0.91,
+    "NZD": 0.56,
+    "note": "1 unit of each currency = X EUR. To convert EUR to AUD: EUR amount / AUD rate"
+  },
+  "labourRates": {
+    "currency": "AUD",
+    "weekdayPerHour": 170,
+    "saturdayPerHour": 240,
+    "sundayPerHour": 280,
+    "publicHolidayPerHour": 320,
+    "hoursPerDay": 8
+  },
+  "projects": [
+    {
+      "projectId": "1096",
+      "customer": "Baiada Poultry Pty Ltd - TAM",
+      "description": "Baiada Project Ultimate & Washer",
+      "suppliers": ["Foodmate", "Unifortes"],
+      "documents": [
+        { "file": "QuotationBaiadaTAMFMUltimateQU-199911052024.pdf", "type": "customer_quote", "ref": "QU-1999" },
+        { "file": "QuotationBaiadaTAMUnifortesWasherQU-1795-1280524.pdf", "type": "customer_quote", "ref": "QU-1795" },
+        { "file": "061.13.03.60.02A_Utility.pdf", "type": "supplier_spec", "supplier": "Unifortes" },
+        { "file": "UNRK02203lay-out.pdf", "type": "layout_drawing", "supplier": "Unifortes" },
+        { "file": "EquipmentSupplierQuestionnaire-Foodmate23-06-2025.pdf", "type": "supplier_questionnaire", "supplier": "Foodmate" }
+      ]
+    },
+    {
+      "projectId": "1854",
+      "customer": "Hazeldenes Chicken Farm",
+      "description": "Hazeldene KFC Project",
+      "suppliers": ["Foodmate", "Henneken"],
+      "documents": [
+        { "file": "Q728251.pdf", "type": "supplier_quote", "supplier": "Foodmate", "ref": "QU-728251", "currency": "EUR" },
+        { "file": "KFC Cut-up Cost sheet.xlsx", "type": "costing", "supplier": "Foodmate" },
+        { "file": "Quotation -8190 KFC Cut-up, infeed system, VFFS 301225.pdf", "type": "customer_quote", "ref": "QU-8190" },
+        { "file": "Quotation -8190 KFC Cut-up, infeed system, VFFS 301225.docx", "type": "customer_quote_source", "ref": "QU-8190" },
+        { "file": "Angebot_AN021599.pdf", "type": "supplier_quote", "supplier": "Henneken", "ref": "AN021599", "currency": "EUR" },
+        { "file": "Angebot_AN022427.pdf", "type": "supplier_quote", "supplier": "Henneken", "ref": "AN022427", "currency": "EUR" },
+        { "file": "Costing.xlsx", "type": "costing", "supplier": "Henneken" },
+        { "file": "Henneken HT Roller Steaker.pdf", "type": "supplier_spec", "supplier": "Henneken" },
+        { "file": "Quotation QU8198 R8 B3 Tumblers 200126.pdf", "type": "customer_quote", "ref": "QU-8198" },
+        { "file": "Quotation QU8198 R8 B3 Tumblers 200126.docx", "type": "customer_quote_source", "ref": "QU-8198" }
+      ]
+    },
+    {
+      "projectId": "1991",
+      "customer": "Turks Poultry (NZ)",
+      "description": "Turks Farms NZ Steen ST7000",
+      "suppliers": ["Steen"],
+      "documents": [
+        { "file": "Quotation Turks Poultry Steen ST7000 QU-4072.docx", "type": "customer_quote_source", "ref": "QU-4072" },
+        { "file": "Quotation Turks Poultry Steen ST7000 QU-8379.pdf", "type": "customer_quote", "ref": "QU-8379" },
+        { "file": "Costing Sheet.xlsx", "type": "costing", "supplier": "Steen" },
+        { "file": "S01724.pdf", "type": "supplier_quote", "supplier": "Steen", "ref": "S01724", "currency": "EUR" }
+      ]
+    },
+    {
+      "projectId": "2005",
+      "customer": "Barossa Fine Foods",
+      "description": "Salting Machine OS-TT",
+      "suppliers": ["Oestergaard"],
+      "documents": [
+        { "file": "OestergaardFood_OSDTT_vs2.pdf", "type": "supplier_spec", "supplier": "Oestergaard" },
+        { "file": "Project Costing Sheet-1.xlsx", "type": "costing", "supplier": "Oestergaard" },
+        { "file": "Qoutation OSD-TT Barossa Fine Foods QU8384 R1.pdf", "type": "customer_quote", "ref": "QU-8384" },
+        { "file": "Qoutation OSD-TT Barossa Fine Foods QU8384 R1.docx", "type": "customer_quote_source", "ref": "QU-8384" }
+      ]
+    },
+    {
+      "projectId": "2030",
+      "customer": "Baiada Poultry Pty Ltd - Beresfield",
+      "description": "Baiada Beresfield Thera 450",
+      "suppliers": ["Colimatic"],
+      "documents": [
+        { "file": "ING25960 oc THR450 RF420 400 P270 2.2 BAIADA OESTERGAARD.pdf", "type": "supplier_quote", "supplier": "Colimatic", "ref": "ING25960", "currency": "EUR" },
+        { "file": "ING25960 oc THR450 RF420 400 P270 2.2 BAIADA OESTERGAARD.doc", "type": "supplier_quote_source", "supplier": "Colimatic" },
+        { "file": "Project Costing Sheet - Copy.xls", "type": "costing", "supplier": "Colimatic" },
+        { "file": "Quotation QU-8405 R2 Thera 450 Baiada Beresfield.pdf", "type": "customer_quote", "ref": "QU-8405" },
+        { "file": "Quotation QU-8405 R2 Thera 450 Baiada Beresfield.docx", "type": "customer_quote_source", "ref": "QU-8405" }
+      ]
+    },
+    {
+      "projectId": "QU-8226",
+      "customer": "The Mad Butcher",
+      "description": "Marelec Portio 3-400",
+      "suppliers": ["Marelec"],
+      "documents": [
+        { "file": "of0_8246 Portio 3 400 Foodpro 2026.pdf", "type": "supplier_quote", "supplier": "Marelec", "currency": "EUR" },
+        { "file": "Costing sheet QU-8226-1 Marelec Portio 3-400 The Mad Buther.xls", "type": "costing", "supplier": "Marelec" },
+        { "file": "Quotation QU-8226-1 Marelec Portio 3-400 The Mad Buther.pdf", "type": "customer_quote", "ref": "QU-8226-1" }
+      ]
+    },
+    {
+      "projectId": "QU-8478",
+      "customer": "Fasta Pasta",
+      "description": "MPS VFFS Stock Machine",
+      "suppliers": ["MPS"],
+      "documents": [
+        { "file": "9 23  Ostergaard Pty VFFS for exibition.pdf", "type": "supplier_quote", "supplier": "MPS", "ref": "MPS-0923", "currency": "EUR" },
+        { "file": "Project Costing QU8478.xlsx", "type": "costing", "supplier": "MPS" },
+        { "file": "Fasta Pasta - MPS VFFS Stock Machine - QU8478.docx", "type": "customer_quote_source", "ref": "QU-8478" }
+      ]
+    },
+    {
+      "projectId": "QU-8452",
+      "customer": "Baiada Poultry Pty Ltd - Hanwood",
+      "description": "Super Cut Wing Cutter",
+      "suppliers": ["Foodmate"],
+      "documents": [
+        { "file": "Q732717.pdf", "type": "supplier_quote", "supplier": "Foodmate", "ref": "732717-0", "currency": "EUR" },
+        { "file": "Q732717.docx", "type": "supplier_quote_source", "supplier": "Foodmate" },
+        { "file": "Project Costing Sheet.xls", "type": "costing", "supplier": "Foodmate" },
+        { "file": "Quotation QU-8452 Super Cut Wing Cutter Baiada Hanwood.pdf", "type": "customer_quote", "ref": "QU-8452" },
+        { "file": "Quotation QU-8452 Super Cut Wing Cutter Baiada Hanwood.docx", "type": "customer_quote_source", "ref": "QU-8452" },
+        { "file": "Appendix 1 GTC Foodmate - October 2023.pdf", "type": "supplier_terms", "supplier": "Foodmate" }
+      ]
+    },
+    {
+      "projectId": "REF-8267",
+      "customer": "Pure Product Australia",
+      "description": "MPS Powder Conveyor + Auger Filler + VFFS + Zipper (TEMPLATE reference)",
+      "suppliers": ["MPS"],
+      "documents": [
+        { "file": "Quotation TEMPLATE.docx", "type": "customer_quote_template", "ref": "QU-8267", "note": "Real issued quote used as house-style reference" }
+      ]
+    }
+  ]
+}
