@@ -75,3 +75,8 @@
 - [x] Wire commission into live pricing workflow — getSupplierCommission called during calculateCosting, 2% currencyMarkdownPct applied
 - [x] Wire quotationTemplate into PDF generator — TEMPLATE_PRICE_NOTES and full brand list from QuotationTEMPLATE.docx integrated
 - [x] Opportunity-by-supplier reporting page — /reports/suppliers with KPI cards, supplier table, win rate badges, verified in browser
+
+## End-to-End Validation & Data Import
+- [x] Import 8 historical quotes (Foodmate, Henneken, Unifortes, MPS) from real supplier documents into database
+- [x] Verify Opportunity by Supplier report — 9 quotes, $1.63M total, 4 suppliers, win rates visible
+- [x] Verify dashboard — 9 quotes, 7 finalized, 2 in progress, all suppliers and customers correct
