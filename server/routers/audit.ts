@@ -3,6 +3,7 @@ import { z } from "zod";
 import * as db from "../db";
 import { TRPCError } from "@trpc/server";
 import { invokeLLM } from "../_core/llm";
+import { scoreQuoteAccuracy, type QuoteDataForScoring } from "../accuracy";
 
 export interface AuditFinding {
   id: string;
@@ -19,6 +20,59 @@ export interface AuditFinding {
 }
 
 export const auditRouter = router({
+  // Deterministic accuracy score for a single quote
+  scoreQuote: protectedProcedure
+    .input(z.object({ quoteId: z.number() }))
+    .query(async ({ input }) => {
+      const quote = await db.getQuoteById(input.quoteId);
+      if (!quote) throw new TRPCError({ code: "NOT_FOUND", message: "Quote not found" });
+
+      const items = await db.getQuoteLineItems(input.quoteId);
+      const suppliers = await db.listSuppliers();
+      const supplierConfig = suppliers.find(
+        (s) => s.name.toLowerCase() === (quote.supplierName || "").toLowerCase()
+      );
+
+      const computedGrandTotal = items.reduce(
+        (sum, item) => sum + Number(item.sellTotalPrice || 0),
+        0
+      ) + Number(quote.freightCostAud || 0) + Number(quote.installationCostAud || 0) + Number(quote.otherLocalCostAud || 0);
+
+      const data: QuoteDataForScoring = {
+        supplierName: quote.supplierName,
+        supplierQuoteRef: quote.supplierQuoteRef,
+        extractedItemCount: items.length,
+        storedItemCount: items.length,
+        pricingModel: supplierConfig?.pricingModel ?? null,
+        supplierConfigExists: !!supplierConfig,
+        sourceCurrency: (quote as any).sourceCurrency ?? (quote as any).currency ?? "EUR",
+        exchangeRate: quote.exchangeRate ? Number(quote.exchangeRate) : null,
+        rateConfirmedByName: (quote as any).rateConfirmedByName ?? null,
+        rateConfirmedAt: (quote as any).rateConfirmedAt ? new Date((quote as any).rateConfirmedAt).toISOString() : null,
+        currencyMarkdownPct: 2,
+        discountPct: supplierConfig?.defaultDiscountPct ? Number(supplierConfig.defaultDiscountPct) : null,
+        marginPct: supplierConfig?.defaultMarginPct ? Number(supplierConfig.defaultMarginPct) : null,
+        lineItems: items.map((i) => ({
+          description: i.description ?? "",
+          qty: Number(i.quantity ?? 1),
+          unitPrice: Number(i.listUnitPrice ?? i.netUnitCost ?? 0),
+          sellTotalPrice: Number(i.sellTotalPrice ?? 0),
+        })),
+        grandTotalAud: quote.grandTotalAud ? Number(quote.grandTotalAud) : null,
+        computedGrandTotalAud: computedGrandTotal,
+        hasPdfGenerated: !!(quote as any).quotationPdfUrl || !!(quote as any).generatedPdfUrl,
+        hasSupplierPdfStored: !!quote.supplierPdfUrl,
+        sfQuoteNumber: (quote as any).salesforceQuoteNumber ?? (quote as any).sfQuoteNumber ?? null,
+        customerName: quote.customerName ?? null,
+        status: quote.status,
+        approvedByName: (quote as any).approvedByName ?? null,
+      };
+
+      const report = scoreQuoteAccuracy(data);
+      report.quoteId = input.quoteId;
+      return report;
+    }),
+
   getFindings: protectedProcedure.query(async () => {
     const quotes = await db.listQuotes();
     const findings: AuditFinding[] = [];

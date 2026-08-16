@@ -63,3 +63,13 @@
 - [x] Editable revision line items: revision dialog now includes qty/list/net/sell editors per line item; server recomputes foreign totals, AUD conversion, and grand total on create — mirrored in features3 tests
 - [x] Approval workflow: in_review status added to enum/labels/StatusBadge (orange); submitForReview (costed/awaiting_sf_number → in_review) + admin-only approve (→ finalized or awaiting_sf_number based on SF#/PDF) with approvedByName/At stamp shown on detail
 - [x] Vitest coverage for batch 3 (features3.test.ts: totals recompute, transition guards, enum completeness) — 29/29 pass
+
+## Accuracy-First Engine
+- [x] Deterministic accuracy scoring engine (server/accuracy.ts) — 10 weighted checks, 0-100% score
+- [x] Accuracy unit tests (7 scenarios: perfect 100%, drift, missing FX, missing markdown, missing PDF, cumulative deductions, 0%)
+- [x] tRPC endpoint audit.scoreQuote for per-quote accuracy retrieval — 37/37 tests pass
+- [ ] Supplier commission calculations from Supplierscommission.xlsx
+- [ ] QuotationTEMPLATE.docx output alignment
+- [ ] Automatic re-scoring on rule changes
+- [ ] Executive accuracy trend widget on dashboard
+- [ ] Opportunity-by-supplier reporting page
