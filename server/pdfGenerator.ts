@@ -9,6 +9,8 @@
 import PDFDocument from "pdfkit";
 import type { Quote, QuoteLineItem } from "../drizzle/schema";
 import { OESTERGAARD_TERMS, getCombinedTerms } from "./termsContent";
+import { TEMPLATE_PRICE_NOTES, TEMPLATE_COMPANY_DETAILS } from "./quotationTemplate";
+import { getSupplierCommission } from "./commission";
 
 // Brand palette (from the original template)
 const BLUE = "#1F6FB2"; // steel blue headings / logo
@@ -423,5 +425,3 @@ export async function generateQuotePdf(quote: Quote, lineItems: QuoteLineItem[])
     doc.end();
   });
 }
-import { TEMPLATE_PRICE_NOTES, TEMPLATE_COMPANY_DETAILS } from "./quotationTemplate";
-import { getSupplierCommission } from "./commission";
