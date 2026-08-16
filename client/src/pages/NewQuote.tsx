@@ -98,6 +98,11 @@ export default function NewQuote() {
   const [matchedSupplierName, setMatchedSupplierName] = useState<string | null>(null);
   const [pricingModel, setPricingModel] = useState<string>("as_is");
 
+  // Reference tracking — which fields were auto-filled from the verified index
+  const [referenceApplied, setReferenceApplied] = useState(false);
+  const [referenceValues, setReferenceValues] = useState<{ marginPct: string; discountPct: string; currency: string } | null>(null);
+  const [overrides, setOverrides] = useState<Array<{ field: string; from: string; to: string; at: string }>>([]);
+
   // Step 2 — extraction review
   const [supplierName, setSupplierName] = useState("");
   const [supplierQuoteRef, setSupplierQuoteRef] = useState("");
@@ -179,6 +184,13 @@ export default function NewQuote() {
         if (sd.discountPct > 0 && !ex.distribution_discount_pct) {
           setDistributionDiscountPct(String(sd.discountPct));
         }
+        setReferenceApplied(true);
+        setReferenceValues({
+          marginPct: String(sd.marginPct),
+          discountPct: sd.discountPct > 0 ? String(sd.discountPct) : "",
+          currency: sd.currency,
+        });
+        setOverrides([]);
       }
       setSupplierQuoteRef(ex.supplier_quote_number ?? "");
       // Currency from extraction overrides reference if present
@@ -681,11 +693,31 @@ export default function NewQuote() {
                   Pricing model: <strong>{pricingModel.replaceAll("_", " ")}</strong> · Confirmed rate:{" "}
                   <strong>{confirmedRate?.toFixed(4)}</strong> ({pair})
                 </CardDescription>
+                {referenceApplied && (
+                  <div className="mt-2 flex items-center gap-2 rounded-md bg-green-50 border border-green-200 px-3 py-1.5 text-sm text-green-800">
+                    <svg className="h-4 w-4 text-green-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span><strong>Reference Applied</strong> — Verified defaults from supplier index ({matchedSupplierName})</span>
+                  </div>
+                )}
+                {overrides.length > 0 && (
+                  <div className="mt-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-1.5 text-sm text-amber-800">
+                    <strong>Manual overrides ({overrides.length}):</strong>{" "}
+                    {overrides.map((o, i) => (
+                      <span key={i}>{o.field} ({o.from} → {o.to}){i < overrides.length - 1 ? ", " : ""}</span>
+                    ))}
+                  </div>
+                )}
               </CardHeader>
               <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-1.5">
                   <Label>Margin %</Label>
-                  <Input type="number" value={marginPct} onChange={e => setMarginPct(e.target.value)} />
+                  <Input type="number" value={marginPct} onChange={e => {
+                    const newVal = e.target.value;
+                    if (referenceValues && newVal !== referenceValues.marginPct) {
+                      setOverrides(prev => [...prev.filter(o => o.field !== "Margin %"), { field: "Margin %", from: referenceValues.marginPct + "%", to: newVal + "%", at: new Date().toISOString() }]);
+                    }
+                    setMarginPct(newVal);
+                  }} />
                 </div>
                 {pricingModel === "list_minus_distribution" && (
                   <div className="space-y-1.5">
@@ -693,7 +725,13 @@ export default function NewQuote() {
                     <Input
                       type="number"
                       value={distributionDiscountPct}
-                      onChange={e => setDistributionDiscountPct(e.target.value)}
+                      onChange={e => {
+                        const newVal = e.target.value;
+                        if (referenceValues && newVal !== referenceValues.discountPct) {
+                          setOverrides(prev => [...prev.filter(o => o.field !== "Discount %"), { field: "Discount %", from: referenceValues.discountPct + "%", to: newVal + "%", at: new Date().toISOString() }]);
+                        }
+                        setDistributionDiscountPct(newVal);
+                      }}
                     />
                   </div>
                 )}
