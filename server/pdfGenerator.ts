@@ -425,3 +425,35 @@ export async function generateQuotePdf(quote: Quote, lineItems: QuoteLineItem[])
     doc.end();
   });
 }
+import { getDb } from "./db";
+import { productImages } from "../drizzle/schema";
+import { like } from "drizzle-orm";
+
+// Match a product image from the library for the PDF
+async function findProductImage(supplierName: string, productDescription: string): Promise<string | null> {
+  try {
+    const db = await getDb();
+    if (!db) return null;
+    const allImages = await db.select().from(productImages)
+      .where(like(productImages.supplierName, `%${supplierName}%`));
+    if (allImages.length === 0) return null;
+
+    // Simple keyword matching
+    const keywords = productDescription.toLowerCase().split(/[\s,;]+/).filter(w => w.length > 3);
+    let bestMatch: any = null;
+    let bestScore = 0;
+    for (const img of allImages) {
+      let score = 0;
+      const tags = (img.tags || "").toLowerCase();
+      const model = (img.productModel || "").toLowerCase();
+      const name = (img.productName || "").toLowerCase();
+      for (const kw of keywords) {
+        if (model.includes(kw)) score += 3;
+        if (name.includes(kw)) score += 2;
+        if (tags.includes(kw)) score += 1;
+      }
+      if (score > bestScore) { bestScore = score; bestMatch = img; }
+    }
+    return bestMatch?.imageUrl || null;
+  } catch { return null; }
+}

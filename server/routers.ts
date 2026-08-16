@@ -29,6 +29,8 @@ export const appRouter = router({
   revisions: revisionsRouter,
   email: emailRouter,
   audit: auditRouter,
+  productImages: productImagesRouter,
 });
 
 export type AppRouter = typeof appRouter;
+import { productImagesRouter } from "./routers/productImages";

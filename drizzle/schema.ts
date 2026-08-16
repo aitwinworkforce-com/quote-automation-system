@@ -195,3 +195,22 @@ export const auditFeedback = mysqlTable("auditFeedback", {
 
 export type AuditFeedbackEntry = typeof auditFeedback.$inferSelect;
 export type InsertAuditFeedbackEntry = typeof auditFeedback.$inferInsert;
+
+// ─── Product Image Library ───────────────────────────────────────────────────
+export const productImages = mysqlTable("productImages", {
+  id: int("id").primaryKey().autoincrement(),
+  supplierId: int("supplierId").notNull(),
+  supplierName: varchar("supplierName", { length: 128 }).notNull(),
+  productModel: varchar("productModel", { length: 255 }).notNull(),
+  productName: varchar("productName", { length: 255 }),
+  imageUrl: text("imageUrl").notNull(),
+  imageKey: varchar("imageKey", { length: 512 }),
+  sourceType: varchar("sourceType", { length: 32 }).notNull().default("manual"), // manual | scraped
+  sourceUrl: text("sourceUrl"),
+  tags: text("tags"), // comma-separated keywords for fuzzy matching
+  createdAt: timestamp("createdAt").defaultNow(),
+  updatedAt: timestamp("updatedAt").defaultNow(),
+});
+
+export type ProductImage = typeof productImages.$inferSelect;
+export type InsertProductImage = typeof productImages.$inferInsert;
