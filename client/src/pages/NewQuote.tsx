@@ -37,7 +37,8 @@ const STEPS = [
   { id: 2, label: "Review Extraction" },
   { id: 3, label: "Exchange Rate" },
   { id: 4, label: "Costing" },
-  { id: 5, label: "Finalise" },
+  { id: 5, label: "Image Preview" },
+  { id: 6, label: "Finalise" },
 ] as const;
 
 function StepIndicator({ current }: { current: number }) {
@@ -831,14 +832,47 @@ export default function NewQuote() {
                 <ArrowLeft className="h-4 w-4" /> Back
               </Button>
               <Button onClick={() => setStep(5)} disabled={!costingResult}>
-                Continue to finalise <ArrowRight className="h-4 w-4" />
+                Continue to image preview <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
         )}
 
-        {/* ----------------------------------------------- Step 5: Finalise */}
+
+        {/* ----------------------------------------------- Step 5: Image Preview */}
         {step === 5 && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-violet-600" />
+                  Product Image Preview
+                </CardTitle>
+                <CardDescription>
+                  Verify the matched catalogue image before generating the final PDF.
+                  This image will appear on the Equipment Specification page.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <ProductImagePreview
+                  supplierName={supplierName}
+                  productDescription={productCategory || ""}
+                />
+                <div className="flex justify-between pt-4">
+                  <Button variant="outline" onClick={() => setStep(4)}>
+                    <ArrowLeft className="h-4 w-4" /> Back
+                  </Button>
+                  <Button size="lg" onClick={() => setStep(6)}>
+                    Continue to Finalise <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* ----------------------------------------------- Step 6: Finalise */}
+        {step === 6 && (
           <div className="space-y-6">
             {generatedUrl ? (
               <Card className="border-emerald-300 bg-emerald-50/50">
@@ -902,7 +936,7 @@ export default function NewQuote() {
                       </div>
                     </div>
                     <div className="flex justify-between pt-2">
-                      <Button variant="outline" onClick={() => setStep(4)}>
+                      <Button variant="outline" onClick={() => setStep(5)}>
                         <ArrowLeft className="h-4 w-4" /> Back
                       </Button>
                       <Button size="lg" onClick={() => void handleFinalize()} disabled={busy || !sfNumber.trim()}>
@@ -917,6 +951,67 @@ export default function NewQuote() {
           </div>
         )}
       </main>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Product Image Preview sub-component
+// ---------------------------------------------------------------------------
+function ProductImagePreview({ supplierName, productDescription }: { supplierName: string; productDescription: string }) {
+  const { data, isLoading } = trpc.productImages.match.useQuery(
+    { supplierName, productDescription, productModel: productDescription },
+    { enabled: !!supplierName }
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-4 rounded-lg border p-6">
+        <Skeleton className="h-32 w-32 rounded" />
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!data?.matched || !data.image) {
+    return (
+      <div className="flex items-center gap-4 rounded-lg border border-amber-200 bg-amber-50 p-6">
+        <div className="flex h-32 w-32 items-center justify-center rounded bg-muted">
+          <FileText className="h-10 w-10 text-muted-foreground" />
+        </div>
+        <div>
+          <p className="font-semibold text-amber-800">No product image matched</p>
+          <p className="text-sm text-amber-700">
+            No catalogue image was found for "{supplierName} — {productDescription}".
+            The PDF will be generated without a product image on the specification page.
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            You can upload product images in Suppliers → Product Images to improve future matches.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-6 rounded-lg border border-emerald-200 bg-emerald-50 p-6">
+      <img
+        src={data.image.imageUrl}
+        alt={data.image.productName || data.image.productModel}
+        className="h-40 w-40 rounded object-contain border bg-white"
+      />
+      <div className="space-y-1">
+        <p className="font-semibold text-emerald-800">Image matched</p>
+        <p className="text-sm"><strong>Model:</strong> {data.image.productModel}</p>
+        {data.image.productName && <p className="text-sm"><strong>Name:</strong> {data.image.productName}</p>}
+        <p className="text-xs text-muted-foreground">Source: {data.image.sourceType === "manual" ? "Uploaded manually" : "Scraped from catalogue"}</p>
+        <p className="mt-2 text-xs text-emerald-700">
+          This image will appear on the Equipment Specification page of the quotation PDF.
+        </p>
+      </div>
     </div>
   );
 }
