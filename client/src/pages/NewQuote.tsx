@@ -41,6 +41,68 @@ const STEPS = [
   { id: 6, label: "Finalise" },
 ] as const;
 
+/**
+ * Per-step accuracy score — shows what % of accuracy checks are passing
+ * at the current stage of the workflow. This gives real-time feedback
+ * as data is filled in.
+ */
+function StepAccuracyBadge({ step, data }: {
+  step: number;
+  data: {
+    hasFile: boolean;
+    supplierName: string;
+    supplierQuoteRef: string;
+    lineItemCount: number;
+    customerName: string;
+    exchangeRateConfirmed: boolean;
+    marginPct: string;
+    costingDone: boolean;
+    sfNumber: string;
+    generatedUrl: string | null;
+  };
+}) {
+  // Calculate a running accuracy score based on available data at this step
+  const checks = [
+    { label: "Source file uploaded", passed: data.hasFile, weight: 10 },
+    { label: "Supplier identified", passed: !!data.supplierName, weight: 5 },
+    { label: "Quote ref extracted", passed: !!data.supplierQuoteRef, weight: 5 },
+    { label: "Line items extracted", passed: data.lineItemCount > 0, weight: 15 },
+    { label: "Customer identified", passed: !!data.customerName, weight: 5 },
+    { label: "FX rate confirmed", passed: data.exchangeRateConfirmed, weight: 15 },
+    { label: "Pricing model applied", passed: !!data.supplierName && data.costingDone, weight: 10 },
+    { label: "2% markdown applied", passed: data.costingDone, weight: 10 },
+    { label: "Totals reconciled", passed: data.costingDone, weight: 15 },
+    { label: "Document generated", passed: !!data.generatedUrl, weight: 10 },
+  ];
+
+  // Only count checks relevant up to the current step
+  const relevantChecks = step <= 1 ? checks.slice(0, 1)
+    : step === 2 ? checks.slice(0, 5)
+    : step === 3 ? checks.slice(0, 6)
+    : step === 4 ? checks.slice(0, 9)
+    : step === 5 ? checks.slice(0, 9)
+    : checks;
+
+  const earned = relevantChecks.reduce((s, c) => s + (c.passed ? c.weight : 0), 0);
+  const max = relevantChecks.reduce((s, c) => s + c.weight, 0);
+  const score = max > 0 ? Math.round((earned / max) * 100) : 0;
+
+  if (step === 1 && !data.hasFile) return null; // Don't show before upload
+
+  const color = score >= 90 ? "text-emerald-600 bg-emerald-50 border-emerald-200"
+    : score >= 70 ? "text-amber-600 bg-amber-50 border-amber-200"
+    : "text-red-600 bg-red-50 border-red-200";
+
+  return (
+    <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${color}`}>
+      <svg className="h-3 w-3" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zm3.78 5.22a.75.75 0 0 0-1.06 0L7 8.94 5.28 7.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.06 0l4.25-4.25a.75.75 0 0 0 0-1.06z"/>
+      </svg>
+      Accuracy: {score}%
+    </div>
+  );
+}
+
 function StepIndicator({ current }: { current: number }) {
   return (
     <div className="mb-8 flex items-center gap-2 overflow-x-auto pb-1">
@@ -380,6 +442,24 @@ export default function NewQuote() {
           exchange rate, apply costing, then finalise with the Salesforce number.
         </p>
         <StepIndicator current={step} />
+
+        <div className="mb-6">
+          <StepAccuracyBadge
+            step={step}
+            data={{
+              hasFile: !!fileName,
+              supplierName,
+              supplierQuoteRef,
+              lineItemCount: lineItems.length,
+              customerName,
+              exchangeRateConfirmed: !!costingResult,
+              marginPct,
+              costingDone: !!costingResult,
+              sfNumber,
+              generatedUrl,
+            }}
+          />
+        </div>
 
         {/* ------------------------------------------------ Step 1: Upload */}
         {step === 1 && (
