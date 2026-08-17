@@ -158,38 +158,51 @@ export default function NewQuote() {
   }, [ratesQuery.data, currency]);
 
   // ---- handlers ----
-  const handleFile = async (file: File) => {
-    const ext = file.name.split(".").pop()?.toLowerCase() || "";
-    const allowedExts = ["pdf", "docx", "xlsx", "xls"];
-    if (!allowedExts.includes(ext)) {
-      toast.error("Please upload a PDF, DOCX, or XLSX file");
-      return;
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+
+  const classifyFile = (name: string) => {
+    const ext = name.split(".").pop()?.toLowerCase() || "";
+    if (ext === "pdf") return "pdf";
+    if (ext === "docx" || ext === "doc") return "docx";
+    if (ext === "xlsx" || ext === "xls") return "xls";
+    return "unknown";
+  };
+
+  const handleFilesSelected = (files: FileList | File[]) => {
+    const allowed = ["pdf", "docx", "doc", "xlsx", "xls"];
+    const valid: File[] = [];
+    for (const f of Array.from(files)) {
+      const ext = f.name.split(".").pop()?.toLowerCase() || "";
+      if (allowed.includes(ext)) valid.push(f);
+      else toast.error(`Unsupported file: ${f.name}`);
     }
-    setFileName(file.name);
-    const b64 = await new Promise<string>((resolve, reject) => {
-      const r = new FileReader();
-      r.onload = () => resolve((r.result as string).split(",")[1]);
-      r.onerror = reject;
-      r.readAsDataURL(file);
+    if (valid.length > 0) setPendingFiles(prev => [...prev, ...valid]);
+  };
+
+  const removePendingFile = (idx: number) => {
+    setPendingFiles(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleUploadAll = async () => {
+    if (pendingFiles.length === 0) { toast.error("Please add at least one file"); return; }
+    // Find the primary file (PDF preferred, else first file)
+    const pdfFile = pendingFiles.find(f => classifyFile(f.name) === "pdf");
+    const primaryFile = pdfFile || pendingFiles[0];
+    const docxFile = pendingFiles.find(f => classifyFile(f.name) === "docx");
+    const xlsFile = pendingFiles.find(f => classifyFile(f.name) === "xls");
+
+    setFileName(primaryFile.name);
+    const readB64 = (file: File) => new Promise<string>((resolve, reject) => {
+      const r = new FileReader(); r.onload = () => resolve((r.result as string).split(",")[1]); r.onerror = reject; r.readAsDataURL(file);
     });
-    // Read companion files if present
-    const docxFile = (document.getElementById("companion-docx") as HTMLInputElement)?.files?.[0];
-    const xlsFile = (document.getElementById("companion-xls") as HTMLInputElement)?.files?.[0];
-    let docxB64: string | undefined;
-    let xlsB64: string | undefined;
-    if (docxFile) {
-      docxB64 = await new Promise<string>((resolve, reject) => {
-        const r = new FileReader(); r.onload = () => resolve((r.result as string).split(",")[1]); r.onerror = reject; r.readAsDataURL(docxFile);
-      });
-    }
-    if (xlsFile) {
-      xlsB64 = await new Promise<string>((resolve, reject) => {
-        const r = new FileReader(); r.onload = () => resolve((r.result as string).split(",")[1]); r.onerror = reject; r.readAsDataURL(xlsFile);
-      });
-    }
+
+    const b64 = await readB64(primaryFile);
+    const docxB64 = docxFile ? await readB64(docxFile) : undefined;
+    const xlsB64 = xlsFile ? await readB64(xlsFile) : undefined;
+
     try {
       const res = await upload.mutateAsync({
-        fileName: file.name,
+        fileName: primaryFile.name,
         fileBase64: b64,
         docxFileName: docxFile?.name,
         docxFileBase64: docxB64,
@@ -368,10 +381,10 @@ export default function NewQuote() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <CloudUpload className="h-5 w-5 text-primary" /> Upload supplier quote PDF
+                <CloudUpload className="h-5 w-5 text-primary" /> Upload supplier quote files
               </CardTitle>
               <CardDescription>
-                The AI will extract the quotation number, line items, quantities and prices
+                Drop all supplier files at once (PDF, Word, Excel). The AI will extract the quotation number, line items, quantities and prices
                 automatically. Supported suppliers: Collimatic, Marlin / Duravant, Foodmate,
                 Nutri Soy, Phenova (others are treated as-is).
               </CardDescription>
@@ -389,8 +402,7 @@ export default function NewQuote() {
                 onDrop={e => {
                   e.preventDefault();
                   setDragOver(false);
-                  const f = e.dataTransfer.files?.[0];
-                  if (f) void handleFile(f);
+                  if (e.dataTransfer.files?.length) handleFilesSelected(e.dataTransfer.files);
                 }}
               >
                 {upload.isPending ? (
@@ -423,32 +435,46 @@ export default function NewQuote() {
                 ) : (
                   <>
                     <FileText className="h-10 w-10 text-muted-foreground/60" />
-                    <p className="font-medium">Drop the supplier quote file here, or click to browse</p>
-                    <p className="text-sm text-muted-foreground">PDF, DOCX, or XLSX — up to 25 MB</p>
+                    <p className="font-medium">Drop all supplier quote files here, or click to browse</p>
+                    <p className="text-sm text-muted-foreground">PDF, DOCX, XLSX — select multiple files — up to 25 MB each</p>
                   </>
                 )}
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept=".pdf,.docx,.xlsx,.xls"
+                  multiple
                   className="hidden"
                   onChange={e => {
-                    const f = e.target.files?.[0];
-                    if (f) void handleFile(f);
+                    if (e.target.files?.length) handleFilesSelected(e.target.files);
                   }}
                 />
               </div>
-              {/* Companion file inputs */}
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-muted-foreground">Companion Word doc (optional)</label>
-                  <input id="companion-docx" type="file" accept=".docx" className="block w-full text-sm file:mr-2 file:rounded file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-blue-700 hover:file:bg-blue-100" />
+              {/* Selected files list */}
+              {pendingFiles.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-sm font-medium">{pendingFiles.length} file{pendingFiles.length !== 1 ? "s" : ""} selected:</p>
+                  <div className="space-y-1.5">
+                    {pendingFiles.map((f, i) => {
+                      const type = classifyFile(f.name);
+                      const colors: Record<string, string> = { pdf: "bg-red-50 text-red-700", docx: "bg-blue-50 text-blue-700", xls: "bg-green-50 text-green-700", unknown: "bg-gray-50 text-gray-700" };
+                      return (
+                        <div key={i} className="flex items-center justify-between rounded-md border px-3 py-2">
+                          <div className="flex items-center gap-2">
+                            <span className={`rounded px-1.5 py-0.5 text-xs font-bold uppercase ${colors[type]}`}>{type}</span>
+                            <span className="text-sm truncate max-w-[250px]">{f.name}</span>
+                            <span className="text-xs text-muted-foreground">({(f.size / 1024).toFixed(0)} KB)</span>
+                          </div>
+                          <button type="button" onClick={() => removePendingFile(i)} className="text-muted-foreground hover:text-destructive text-sm">✕</button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <Button onClick={() => void handleUploadAll()} disabled={upload.isPending} className="mt-3 w-full">
+                    {upload.isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Processing...</> : `Upload & Extract (${pendingFiles.length} files)`}
+                  </Button>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-muted-foreground">Companion Excel costing (optional)</label>
-                  <input id="companion-xls" type="file" accept=".xlsx,.xls" className="block w-full text-sm file:mr-2 file:rounded file:border-0 file:bg-green-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-green-700 hover:file:bg-green-100" />
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         )}
