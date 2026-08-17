@@ -147,6 +147,7 @@ export default function NewQuote() {
   const updateDetails = trpc.quotes.updateDetails.useMutation();
   const setSf = trpc.quotes.setSalesforceNumber.useMutation();
   const generatePdf = trpc.pdf.generateQuote.useMutation();
+  const generateDocx = trpc.pdf.generateQuoteDocx.useMutation();
   const utils = trpc.useUtils();
 
   const pair = currency === "EUR" ? "AUD/EUR" : currency === "USD" ? "AUD/USD" : "AUD/AUD";
@@ -316,7 +317,7 @@ export default function NewQuote() {
   const handleFinalize = async () => {
     if (!quoteId) return;
     if (!sfNumber.trim()) {
-      toast.error("Enter the Salesforce quotation number before generating the PDF");
+      toast.error("Enter the Salesforce quotation number before generating the quotation");
       return;
     }
     try {
@@ -329,12 +330,16 @@ export default function NewQuote() {
         deliveryTerms: deliveryTerms || undefined,
       });
       await setSf.mutateAsync({ quoteId, salesforceQuoteNumber: sfNumber.trim() });
-      const res = await generatePdf.mutateAsync({ quoteId });
-      setGeneratedUrl(res.url);
+      // Generate both DOCX (primary) and PDF
+      const [docxRes] = await Promise.all([
+        generateDocx.mutateAsync({ quoteId }),
+        generatePdf.mutateAsync({ quoteId }).catch(() => null), // PDF is secondary
+      ]);
+      setGeneratedUrl(docxRes.url);
       utils.quotes.list.invalidate();
-      toast.success("Quotation PDF generated");
+      toast.success("Quotation Word document generated");
     } catch (e: any) {
-      toast.error(e.message ?? "PDF generation failed");
+      toast.error(e.message ?? "Document generation failed");
     }
   };
 
@@ -360,7 +365,7 @@ export default function NewQuote() {
 
   const busy =
     upload.isPending || confirmRate.isPending || runCosting.isPending ||
-    updateDetails.isPending || setSf.isPending || generatePdf.isPending;
+    updateDetails.isPending || setSf.isPending || generatePdf.isPending || generateDocx.isPending;
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/40">
@@ -942,13 +947,13 @@ export default function NewQuote() {
                   <div>
                     <p className="text-xl font-bold">Quotation {sfNumber} generated</p>
                     <p className="text-sm text-muted-foreground">
-                      The branded PDF has been stored and the quote marked as finalised.
+                      The branded Word document has been stored and the quote marked as finalised.
                     </p>
                   </div>
                   <div className="flex gap-3">
                     <Button asChild>
                       <a href={generatedUrl} target="_blank" rel="noreferrer">
-                        <FileText className="h-4 w-4" /> Download PDF
+                        <FileText className="h-4 w-4" /> Download DOCX
                       </a>
                     </Button>
                     <Button variant="outline" onClick={() => navigate("/")}>Back to dashboard</Button>
@@ -962,7 +967,7 @@ export default function NewQuote() {
                   <AlertTitle>Salesforce quotation number required</AlertTitle>
                   <AlertDescription>
                     Create the quotation record in Salesforce now, then paste the generated
-                    quotation number below. The final PDF cannot be produced without it.
+                    quotation number below. The final document cannot be produced without it.
                   </AlertDescription>
                 </Alert>
                 <Card>
@@ -1002,7 +1007,7 @@ export default function NewQuote() {
                       </Button>
                       <Button size="lg" onClick={() => void handleFinalize()} disabled={busy || !sfNumber.trim()}>
                         {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-                        Generate Oestergaard quotation PDF
+                        Generate Oestergaard Quotation
                       </Button>
                     </div>
                   </CardContent>

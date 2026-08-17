@@ -62,6 +62,7 @@ export default function QuoteDetail() {
   );
   const setSf = trpc.quotes.setSalesforceNumber.useMutation();
   const generatePdf = trpc.pdf.generateQuote.useMutation();
+  const generateDocx = trpc.pdf.generateQuoteDocx.useMutation();
   const deleteQuote = trpc.quotes.delete.useMutation();
   const createRevision = trpc.revisions.create.useMutation();
   const submitForReview = trpc.revisions.submitForReview.useMutation();
@@ -187,12 +188,13 @@ export default function QuoteDetail() {
         await setSf.mutateAsync({ quoteId, salesforceQuoteNumber: sfNumber.trim() });
       }
       const res = await generatePdf.mutateAsync({ quoteId });
+      const docxRes = await generateDocx.mutateAsync({ quoteId }).catch(() => null);
       await refetch();
       utils.quotes.list.invalidate();
-      toast.success("Quotation PDF generated");
-      window.open(res.url, "_blank");
+      toast.success("Quotation documents generated");
+      window.open(docxRes?.url ?? res.url, "_blank");
     } catch (e: any) {
-      toast.error(e.message ?? "Failed to generate PDF");
+      toast.error(e.message ?? "Failed to generate documents");
     }
   };
 
@@ -360,6 +362,27 @@ export default function QuoteDetail() {
               <Button asChild>
                 <a href={quote.generatedPdfUrl} target="_blank" rel="noreferrer">
                   <Download className="h-4 w-4" /> Quotation PDF
+                </a>
+              </Button>
+            )}
+            {quote.generatedDocxUrl && (
+              <Button asChild variant="default">
+                <a href={quote.generatedDocxUrl} target="_blank" rel="noreferrer">
+                  <Download className="h-4 w-4" /> Quotation DOCX
+                </a>
+              </Button>
+            )}
+            {quote.supplierDocxUrl && (
+              <Button variant="outline" asChild>
+                <a href={quote.supplierDocxUrl} target="_blank" rel="noreferrer">
+                  <FileText className="h-4 w-4" /> Supplier DOCX
+                </a>
+              </Button>
+            )}
+            {quote.supplierXlsUrl && (
+              <Button variant="outline" asChild>
+                <a href={quote.supplierXlsUrl} target="_blank" rel="noreferrer">
+                  <FileText className="h-4 w-4" /> Supplier XLS
                 </a>
               </Button>
             )}
@@ -663,9 +686,9 @@ export default function QuoteDetail() {
           {quote.status === "finalized" && (
             <Card>
               <CardHeader>
-                <CardTitle>Regenerate PDF</CardTitle>
+                <CardTitle>Regenerate Documents</CardTitle>
                 <CardDescription>
-                  Re-produce the quotation PDF (e.g. after correcting details). The stored file will be replaced.
+                  Re-produce the quotation DOCX and PDF (e.g. after correcting details). The stored files will be replaced.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -679,7 +702,7 @@ export default function QuoteDetail() {
                   ) : (
                     <RefreshCw className="h-4 w-4" />
                   )}
-                  Regenerate quotation PDF
+                  Regenerate quotation documents
                 </Button>
               </CardContent>
             </Card>

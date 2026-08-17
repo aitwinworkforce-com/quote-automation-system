@@ -80,3 +80,19 @@
 - [x] Import 8 historical quotes (Foodmate, Henneken, Unifortes, MPS) from real supplier documents into database
 - [x] Verify Opportunity by Supplier report — 9 quotes, $1.63M total, 4 suppliers, win rates visible
 - [x] Verify dashboard — 9 quotes, 7 finalized, 2 in progress, all suppliers and customers correct
+
+## Audit Dashboard & Product Images
+- [x] Audit dashboard card-based redesign with Fix Now + AI suggestion modal
+- [x] Product image library with bulk upload, gallery, web scraper fallback
+- [x] Image preview step in quote wizard (Step 5)
+- [x] Supplier reference auto-select with "Reference Applied" badge + override audit
+- [x] Multi-file upload (PDF + DOCX + XLSX) in single drag-and-drop with auto-classification
+
+## DOCX Output Generation (QuotationTEMPLATE.docx format)
+- [x] Install docx npm package for Word document generation
+- [x] Create server/docxGenerator.ts — full template structure (cover, about, support, letter, pricing table, sales conditions, T&Cs)
+- [x] Add generatedDocxKey/Url columns to quotes table (migration 0008)
+- [x] tRPC generateQuoteDocx procedure in pdf router
+- [x] Finalize step generates DOCX as primary output (PDF generated as secondary)
+- [x] QuoteDetail page: Quotation DOCX download button + companion file buttons (Supplier DOCX, Supplier XLS)
+- [x] Vitest tests for DOCX generator (2 tests: valid ZIP buffer, different output per customer/supplier)

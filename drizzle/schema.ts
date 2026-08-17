@@ -126,6 +126,8 @@ export const quotes = mysqlTable("quotes", {
   supplierXlsName: varchar("supplierXlsName", { length: 255 }),
   generatedPdfKey: varchar("generatedPdfKey", { length: 512 }),
   generatedPdfUrl: varchar("generatedPdfUrl", { length: 1024 }),
+  generatedDocxKey: varchar("generatedDocxKey", { length: 512 }),
+  generatedDocxUrl: varchar("generatedDocxUrl", { length: 1024 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

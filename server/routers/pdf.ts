@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import * as db from "../db";
 import { generateQuotePdf } from "../pdfGenerator";
+import { generateQuoteDocx } from "../docxGenerator";
 import { storagePut } from "../storage";
 import { protectedProcedure, router } from "../_core/trpc";
 
@@ -48,6 +49,47 @@ export const pdfRouter = router({
         status: "finalized",
         generatedPdfKey: key,
         generatedPdfUrl: url,
+      });
+
+      return { url, key };
+    }),
+
+  /**
+   * Generate the Oestergaard-branded quote DOCX (Word document).
+   * Same preconditions as generateQuote (PDF).
+   * This is the primary output format matching QuotationTEMPLATE.docx.
+   */
+  generateQuoteDocx: protectedProcedure
+    .input(z.object({ quoteId: z.number() }))
+    .mutation(async ({ input }) => {
+      const quote = await db.getQuoteById(input.quoteId);
+      if (!quote) throw new TRPCError({ code: "NOT_FOUND" });
+      if (!quote.salesforceQuoteNumber) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "The Salesforce quotation number must be entered before the DOCX can be generated.",
+        });
+      }
+      if (!quote.exchangeRateConfirmed || !quote.grandTotalAud) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Costing must be completed (with a confirmed exchange rate) before generating the DOCX.",
+        });
+      }
+      const lineItems = await db.getQuoteLineItems(input.quoteId);
+
+      const docxBuffer = await generateQuoteDocx(quote, lineItems);
+
+      // Organised storage: quotes/{customer}/{product-category}/Quotation-{SF#}.docx
+      const customerSeg = sanitizeSegment(quote.customerName ?? "unknown-customer");
+      const categorySeg = sanitizeSegment(quote.productCategory ?? "general");
+      const fileKey = `quotes/${customerSeg}/${categorySeg}/Quotation-${sanitizeSegment(quote.salesforceQuoteNumber)}.docx`;
+      const { key, url } = await storagePut(fileKey, docxBuffer, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+
+      await db.updateQuote(input.quoteId, {
+        status: "finalized",
+        generatedDocxKey: key,
+        generatedDocxUrl: url,
       });
 
       return { url, key };
