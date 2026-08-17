@@ -96,3 +96,6 @@
 - [x] Finalize step generates DOCX as primary output (PDF generated as secondary)
 - [x] QuoteDetail page: Quotation DOCX download button + companion file buttons (Supplier DOCX, Supplier XLS)
 - [x] Vitest tests for DOCX generator (2 tests: valid ZIP buffer, different output per customer/supplier)
+
+## Bug Fixes
+- [x] Fix __dirname not defined error in supplierReference.ts (ESM compatibility) — was blocking all uploads from processing
