@@ -241,6 +241,8 @@ export interface QuoteFilter {
   search?: string;
   status?: string;
   supplierName?: string;
+  dateFrom?: string;
+  dateTo?: string;
 }
 
 export async function listQuotes(filter: QuoteFilter = {}) {
@@ -264,6 +266,15 @@ export async function listQuotes(filter: QuoteFilter = {}) {
   }
   if (filter.supplierName) {
     conditions.push(eq(quotes.supplierName, filter.supplierName));
+  }
+  if (filter.dateFrom) {
+    conditions.push(gte(quotes.createdAt, new Date(filter.dateFrom)));
+  }
+  if (filter.dateTo) {
+    // Add 1 day to include the entire end date
+    const endDate = new Date(filter.dateTo);
+    endDate.setDate(endDate.getDate() + 1);
+    conditions.push(lte(quotes.createdAt, endDate));
   }
   const where = conditions.length > 0 ? and(...conditions) : undefined;
   return db.select().from(quotes).where(where).orderBy(desc(quotes.createdAt));
@@ -308,3 +319,4 @@ export async function logExchangeRate(entry: {
   if (!db) return;
   await db.insert(exchangeRateLog).values(entry);
 }
+import { gte, lte } from "drizzle-orm";

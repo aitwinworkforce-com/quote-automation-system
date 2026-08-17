@@ -322,6 +322,8 @@ export const quotesRouter = router({
           search: z.string().optional(),
           status: z.string().optional(),
           supplierName: z.string().optional(),
+          dateFrom: z.string().optional(),
+          dateTo: z.string().optional(),
         })
         .optional(),
     )

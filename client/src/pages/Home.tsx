@@ -93,12 +93,16 @@ function Dashboard() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("all");
   const [supplierName, setSupplierName] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const { data: suppliers } = trpc.quotes.suppliers.useQuery();
   const { data: quotes, isLoading } = trpc.quotes.list.useQuery({
     search: search || undefined,
     status: status === "all" ? undefined : status,
     supplierName: supplierName === "all" ? undefined : supplierName,
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
   });
 
   const stats = {
@@ -176,6 +180,33 @@ function Dashboard() {
                   ))}
                 </SelectContent>
               </Select>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="date"
+                  value={dateFrom}
+                  onChange={e => setDateFrom(e.target.value)}
+                  className="w-[150px]"
+                  placeholder="From"
+                />
+                <span className="text-muted-foreground text-sm">to</span>
+                <Input
+                  type="date"
+                  value={dateTo}
+                  onChange={e => setDateTo(e.target.value)}
+                  className="w-[150px]"
+                  placeholder="To"
+                />
+                {(dateFrom || dateTo) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { setDateFrom(""); setDateTo(""); }}
+                    className="text-xs text-muted-foreground"
+                  >
+                    Clear
+                  </Button>
+                )}
+              </div>
             </div>
 
             {isLoading ? (
