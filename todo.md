@@ -107,3 +107,6 @@
 - [x] Add GBP (British Pound) as supported currency for exchange rates
 - [x] Test full guided workflow with real supplier PDF upload end-to-end
 - [x] Verify accuracy score improves at each wizard step (enhanced badge with checks count)
+- [ ] Add hover tooltip to accuracy badge showing which specific checks passed/failed
+- [x] Add hover tooltip to accuracy badge showing which specific checks passed/failed
+- [x] Redesign Audit Agent page to be more dynamic — collapsible grouped sections, compact KPIs, expand-on-click items, animated scan

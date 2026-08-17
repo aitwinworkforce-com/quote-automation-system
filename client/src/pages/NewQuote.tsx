@@ -97,15 +97,39 @@ function StepAccuracyBadge({ step, data }: {
   const totalCount = relevantChecks.length;
 
   return (
-    <div className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold ${color}`}>
-      <div className="flex items-center gap-1.5">
-        <svg className="h-4 w-4" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zm3.78 5.22a.75.75 0 0 0-1.06 0L7 8.94 5.28 7.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.06 0l4.25-4.25a.75.75 0 0 0 0-1.06z"/>
-        </svg>
-        <span>Accuracy: {score}%</span>
-      </div>
-      <span className="text-xs opacity-75">({passedCount}/{totalCount} checks passed)</span>
-    </div>
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold cursor-help ${color}`}>
+            <div className="flex items-center gap-1.5">
+              <svg className="h-4 w-4" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zm3.78 5.22a.75.75 0 0 0-1.06 0L7 8.94 5.28 7.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.06 0l4.25-4.25a.75.75 0 0 0 0-1.06z"/>
+              </svg>
+              <span>Accuracy: {score}%</span>
+            </div>
+            <span className="text-xs opacity-75">({passedCount}/{totalCount} checks)</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" align="start" className="max-w-xs p-3">
+          <p className="font-semibold text-xs mb-2">Accuracy Checks</p>
+          <ul className="space-y-1">
+            {relevantChecks.map((check, i) => (
+              <li key={i} className="flex items-center gap-2 text-xs">
+                {check.passed ? (
+                  <span className="w-4 h-4 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-[10px] font-bold">✓</span>
+                ) : (
+                  <span className="w-4 h-4 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-[10px] font-bold">✗</span>
+                )}
+                <span className={check.passed ? "text-muted-foreground" : "text-foreground font-medium"}>
+                  {check.label}
+                </span>
+                <span className="ml-auto text-muted-foreground">{check.weight}pts</span>
+              </li>
+            ))}
+          </ul>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
@@ -1169,3 +1193,4 @@ function ProductImagePreview({ supplierName, productDescription }: { supplierNam
     </div>
   );
 }
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
