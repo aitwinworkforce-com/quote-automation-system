@@ -159,8 +159,10 @@ export default function NewQuote() {
 
   // ---- handlers ----
   const handleFile = async (file: File) => {
-    if (!file.name.toLowerCase().endsWith(".pdf")) {
-      toast.error("Please upload a PDF file");
+    const ext = file.name.split(".").pop()?.toLowerCase() || "";
+    const allowedExts = ["pdf", "docx", "xlsx", "xls"];
+    if (!allowedExts.includes(ext)) {
+      toast.error("Please upload a PDF, DOCX, or XLSX file");
       return;
     }
     setFileName(file.name);
@@ -170,8 +172,30 @@ export default function NewQuote() {
       r.onerror = reject;
       r.readAsDataURL(file);
     });
+    // Read companion files if present
+    const docxFile = (document.getElementById("companion-docx") as HTMLInputElement)?.files?.[0];
+    const xlsFile = (document.getElementById("companion-xls") as HTMLInputElement)?.files?.[0];
+    let docxB64: string | undefined;
+    let xlsB64: string | undefined;
+    if (docxFile) {
+      docxB64 = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader(); r.onload = () => resolve((r.result as string).split(",")[1]); r.onerror = reject; r.readAsDataURL(docxFile);
+      });
+    }
+    if (xlsFile) {
+      xlsB64 = await new Promise<string>((resolve, reject) => {
+        const r = new FileReader(); r.onload = () => resolve((r.result as string).split(",")[1]); r.onerror = reject; r.readAsDataURL(xlsFile);
+      });
+    }
     try {
-      const res = await upload.mutateAsync({ fileName: file.name, fileBase64: b64 });
+      const res = await upload.mutateAsync({
+        fileName: file.name,
+        fileBase64: b64,
+        docxFileName: docxFile?.name,
+        docxFileBase64: docxB64,
+        xlsFileName: xlsFile?.name,
+        xlsFileBase64: xlsB64,
+      });
       setQuoteId(res.quoteId);
       const ex = res.extracted;
       setSupplierName(res.matchedSupplier?.name ?? ex.supplier_name ?? "");
@@ -399,20 +423,31 @@ export default function NewQuote() {
                 ) : (
                   <>
                     <FileText className="h-10 w-10 text-muted-foreground/60" />
-                    <p className="font-medium">Drop the supplier PDF here, or click to browse</p>
-                    <p className="text-sm text-muted-foreground">PDF up to 25 MB</p>
+                    <p className="font-medium">Drop the supplier quote file here, or click to browse</p>
+                    <p className="text-sm text-muted-foreground">PDF, DOCX, or XLSX — up to 25 MB</p>
                   </>
                 )}
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="application/pdf"
+                  accept=".pdf,.docx,.xlsx,.xls"
                   className="hidden"
                   onChange={e => {
                     const f = e.target.files?.[0];
                     if (f) void handleFile(f);
                   }}
                 />
+              </div>
+              {/* Companion file inputs */}
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">Companion Word doc (optional)</label>
+                  <input id="companion-docx" type="file" accept=".docx" className="block w-full text-sm file:mr-2 file:rounded file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-blue-700 hover:file:bg-blue-100" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium text-muted-foreground">Companion Excel costing (optional)</label>
+                  <input id="companion-xls" type="file" accept=".xlsx,.xls" className="block w-full text-sm file:mr-2 file:rounded file:border-0 file:bg-green-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-green-700 hover:file:bg-green-100" />
+                </div>
               </div>
             </CardContent>
           </Card>

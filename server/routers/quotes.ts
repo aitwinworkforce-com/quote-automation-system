@@ -33,6 +33,11 @@ export const quotesRouter = router({
       z.object({
         fileName: z.string(),
         fileBase64: z.string(),
+        // Optional companion files
+        docxFileName: z.string().optional(),
+        docxFileBase64: z.string().optional(),
+        xlsFileName: z.string().optional(),
+        xlsFileBase64: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -40,9 +45,33 @@ export const quotesRouter = router({
       if (buffer.length > 25 * 1024 * 1024) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "File exceeds 25MB limit" });
       }
-      // Store the original supplier PDF (temporary key; reorganised on finalize)
-      const key = `supplier-quotes/incoming/${Date.now()}-${sanitizeSegment(input.fileName)}.pdf`;
-      const { key: storedKey, url } = await storagePut(key, buffer, "application/pdf");
+      // Determine file type from extension
+      const ext = input.fileName.split(".").pop()?.toLowerCase() || "pdf";
+      const mimeMap: Record<string, string> = { pdf: "application/pdf", docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", xls: "application/vnd.ms-excel" };
+      const mime = mimeMap[ext] || "application/octet-stream";
+
+      // Store the primary supplier file
+      const key = `supplier-quotes/incoming/${Date.now()}-${sanitizeSegment(input.fileName)}`;
+      const { key: storedKey, url } = await storagePut(key, buffer, mime);
+
+      // Store optional companion DOCX
+      let docxData: { key?: string; url?: string; name?: string } = {};
+      if (input.docxFileBase64 && input.docxFileName) {
+        const docxBuf = Buffer.from(input.docxFileBase64, "base64");
+        const docxKey = `supplier-quotes/incoming/${Date.now()}-${sanitizeSegment(input.docxFileName)}`;
+        const docxResult = await storagePut(docxKey, docxBuf, mimeMap["docx"]);
+        docxData = { key: docxResult.key, url: docxResult.url, name: input.docxFileName };
+      }
+
+      // Store optional companion XLS/XLSX
+      let xlsData: { key?: string; url?: string; name?: string } = {};
+      if (input.xlsFileBase64 && input.xlsFileName) {
+        const xlsBuf = Buffer.from(input.xlsFileBase64, "base64");
+        const xlsExt = input.xlsFileName.split(".").pop()?.toLowerCase() || "xlsx";
+        const xlsKey = `supplier-quotes/incoming/${Date.now()}-${sanitizeSegment(input.xlsFileName)}`;
+        const xlsResult = await storagePut(xlsKey, xlsBuf, mimeMap[xlsExt] || mimeMap["xlsx"]);
+        xlsData = { key: xlsResult.key, url: xlsResult.url, name: input.xlsFileName };
+      }
 
       // Create the draft quote record first so failures are traceable
       const quoteId = await db.createQuote({
@@ -51,6 +80,12 @@ export const quotesRouter = router({
         supplierPdfKey: storedKey,
         supplierPdfUrl: url,
         supplierPdfName: input.fileName,
+        supplierDocxKey: docxData.key,
+        supplierDocxUrl: docxData.url,
+        supplierDocxName: docxData.name,
+        supplierXlsKey: xlsData.key,
+        supplierXlsUrl: xlsData.url,
+        supplierXlsName: xlsData.name,
         quoteDate: new Date().toLocaleDateString("en-AU"),
       });
       // A brand-new quote is the root of its own revision family (Rev A)
