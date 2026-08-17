@@ -94,4 +94,29 @@ export const pdfRouter = router({
 
       return { url, key };
     }),
+
+  /**
+   * Generate a DRAFT preview DOCX (no SF number required).
+   * Uses "DRAFT" as placeholder. Does NOT finalize the quote.
+   */
+  generateDraftDocx: protectedProcedure
+    .input(z.object({ quoteId: z.number() }))
+    .mutation(async ({ input }) => {
+      const quote = await db.getQuoteById(input.quoteId);
+      if (!quote) throw new TRPCError({ code: "NOT_FOUND" });
+      if (!quote.grandTotalAud) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Costing must be completed before generating a draft preview.",
+        });
+      }
+      const lineItems = await db.getQuoteLineItems(input.quoteId);
+      const draftQuote = { ...quote, salesforceQuoteNumber: quote.salesforceQuoteNumber || "DRAFT" };
+      const docxBuffer = await generateQuoteDocx(draftQuote, lineItems);
+      const customerSeg = sanitizeSegment(quote.customerName ?? "unknown-customer");
+      const categorySeg = sanitizeSegment(quote.productCategory ?? "general");
+      const fileKey = `quotes/${customerSeg}/${categorySeg}/DRAFT-Preview-${quote.id}.docx`;
+      const { url } = await storagePut(fileKey, docxBuffer, "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+      return { url };
+    }),
 });

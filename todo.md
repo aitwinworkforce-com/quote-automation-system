@@ -109,3 +109,6 @@
 - [x] Verify accuracy score improves at each wizard step (enhanced badge with checks count)
 - [x] Add hover tooltip to accuracy badge showing which specific checks passed/failed
 - [x] Redesign Audit Agent page to be more dynamic — collapsible grouped sections, compact KPIs, expand-on-click items, animated scan
+- [ ] Add draft DOCX preview generation after costing (no SF number required)
+- [x] Add draft DOCX preview generation after costing (no SF number required)
+- [x] Auto-advance workflow: skip image preview if no image found, streamline FX step

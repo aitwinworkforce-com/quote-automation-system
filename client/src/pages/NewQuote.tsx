@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -240,6 +241,8 @@ export default function NewQuote() {
   const setSf = trpc.quotes.setSalesforceNumber.useMutation();
   const generatePdf = trpc.pdf.generateQuote.useMutation();
   const generateDocx = trpc.pdf.generateQuoteDocx.useMutation();
+  const generateDraft = trpc.pdf.generateDraftDocx.useMutation();
+  const [draftPreviewUrl, setDraftPreviewUrl] = useState<string | null>(null);
   const utils = trpc.useUtils();
 
   const pair = currency === "EUR" ? "AUD/EUR" : currency === "USD" ? "AUD/USD" : currency === "NZD" ? "AUD/NZD" : currency === "GBP" ? "AUD/GBP" : "AUD/AUD";
@@ -459,7 +462,7 @@ export default function NewQuote() {
 
   const busy =
     upload.isPending || confirmRate.isPending || runCosting.isPending ||
-    updateDetails.isPending || setSf.isPending || generatePdf.isPending || generateDocx.isPending;
+    updateDetails.isPending || setSf.isPending || generatePdf.isPending || generateDocx.isPending || generateDraft.isPending;
 
   return (
     <div className="flex min-h-screen flex-col bg-muted/40">
@@ -1009,10 +1012,50 @@ export default function NewQuote() {
               <Button variant="outline" onClick={() => setStep(3)}>
                 <ArrowLeft className="h-4 w-4" /> Back
               </Button>
-              <Button onClick={() => setStep(5)} disabled={!costingResult}>
-                Continue to image preview <ArrowRight className="h-4 w-4" />
+@@ Continue to Finalise
+              <Button onClick={() => setStep(6)} disabled={!costingResult}>
+                Continue to Finalise <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
+
+            {/* Draft Preview - auto-generated after costing */}
+            {costingResult && quoteId && (
+              <Card className="border-blue-200 bg-blue-50/30">
+                <CardContent className="py-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-sm">Draft Quotation Preview</p>
+                      <p className="text-xs text-muted-foreground">Preview the output template before finalising (SF number shows as "DRAFT")</p>
+                    </div>
+                    {draftPreviewUrl ? (
+                      <Button asChild size="sm" variant="outline">
+                        <a href={draftPreviewUrl} target="_blank" rel="noreferrer">
+                          <FileText className="h-3.5 w-3.5 mr-1" /> View Draft DOCX
+                        </a>
+                      </Button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={generateDraft.isPending}
+                        onClick={async () => {
+                          try {
+                            const res = await generateDraft.mutateAsync({ quoteId });
+                            setDraftPreviewUrl(res.url);
+                            toast.success("Draft preview generated");
+                          } catch (e: any) {
+                            toast.error(e.message ?? "Failed to generate draft");
+                          }
+                        }}
+                      >
+                        {generateDraft.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <FileText className="h-3.5 w-3.5 mr-1" />}
+                        Generate Preview
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
 
@@ -1193,4 +1236,3 @@ function ProductImagePreview({ supplierName, productDescription }: { supplierNam
     </div>
   );
 }
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
