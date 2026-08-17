@@ -34,6 +34,7 @@ import {
   TrendingUp,
   Landmark,
 } from "lucide-react";
+import { Download } from "lucide-react";
 
 function LandingHero() {
   return (
@@ -125,6 +126,37 @@ function Dashboard() {
           <Button onClick={() => navigate("/quotes/new")} size="lg">
             <FilePlus2 className="h-4 w-4" /> New Quote
           </Button>
+          {quotes && quotes.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (!quotes) return;
+                const headers = ["Quote #", "Customer", "Product", "Supplier", "Date", "Total (AUD)", "Status", "SF Number"];
+                const rows = quotes.map(q => [
+                  q.salesforceQuoteNumber || `#${q.id}`,
+                  q.customerName || "",
+                  q.productCategory || "",
+                  q.supplierName || "",
+                  q.quoteDate || "",
+                  q.grandTotalAud ? Number(q.grandTotalAud).toFixed(2) : "",
+                  q.status,
+                  q.salesforceQuoteNumber || "",
+                ]);
+                const csvContent = [headers, ...rows]
+                  .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+                  .join("\n");
+                const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `oestergaard-quotes-${new Date().toISOString().slice(0, 10)}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+            >
+              <Download className="h-4 w-4" /> Export CSV
+            </Button>
+          )}
         </div>
 
         <div className="mb-6 grid gap-4 sm:grid-cols-3">

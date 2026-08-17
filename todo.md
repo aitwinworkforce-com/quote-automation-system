@@ -116,5 +116,6 @@
 - [x] Abstract S3 storage to support both Manus S3 and standard AWS SDK
 - [x] Add Railway deployment config (env template, build script, README)
 - [x] Push Railway-ready code to GitHub
-- [ ] Add search and date filter to quotes dashboard
 - [x] Add search and date filter to quotes dashboard
+- [ ] Add CSV export for filtered quote results
+- [x] Add CSV export for filtered quote results
