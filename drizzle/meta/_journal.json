@@ -64,6 +64,13 @@
       "when": 1786937169002,
       "tag": "0008_lush_piledriver",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1786939330655,
+      "tag": "0009_fluffy_ironclad",
+      "breakpoints": true
     }
   ]
 }

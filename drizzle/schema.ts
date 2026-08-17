@@ -73,7 +73,7 @@ export const quotes = mysqlTable("quotes", {
   supplierId: int("supplierId"),
   supplierName: varchar("supplierName", { length: 128 }),
   supplierQuoteRef: varchar("supplierQuoteRef", { length: 128 }),
-  supplierCurrency: mysqlEnum("supplierCurrency", ["EUR", "USD", "AUD"]).default("EUR"),
+  supplierCurrency: mysqlEnum("supplierCurrency", ["EUR", "USD", "AUD", "NZD"]).default("EUR"),
   supplierTerms: text("supplierTerms"),
   footerPricingNote: text("footerPricingNote"),
   // Costing

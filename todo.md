@@ -101,3 +101,6 @@
 - [x] Fix __dirname not defined error in supplierReference.ts (ESM compatibility) — was blocking all uploads from processing
 - [x] Per-step accuracy indicator badge in quote wizard — shows running accuracy % at each stage (red/amber/green)
 - [x] Regenerated demo quote (SF-Q-2026-00147) with DOCX output — Quotation DOCX button now visible on detail page
+
+## Currency Support
+- [x] Add NZD (New Zealand Dollar) as supported currency for exchange rates

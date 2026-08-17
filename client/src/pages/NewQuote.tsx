@@ -169,7 +169,7 @@ export default function NewQuote() {
   // Step 2 — extraction review
   const [supplierName, setSupplierName] = useState("");
   const [supplierQuoteRef, setSupplierQuoteRef] = useState("");
-  const [currency, setCurrency] = useState<"EUR" | "USD" | "AUD">("EUR");
+  const [currency, setCurrency] = useState<"EUR" | "USD" | "AUD" | "NZD">("EUR");
   const [customerName, setCustomerName] = useState("");
   const [customerContact, setCustomerContact] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
@@ -212,11 +212,12 @@ export default function NewQuote() {
   const generateDocx = trpc.pdf.generateQuoteDocx.useMutation();
   const utils = trpc.useUtils();
 
-  const pair = currency === "EUR" ? "AUD/EUR" : currency === "USD" ? "AUD/USD" : "AUD/AUD";
+  const pair = currency === "EUR" ? "AUD/EUR" : currency === "USD" ? "AUD/USD" : currency === "NZD" ? "AUD/NZD" : "AUD/AUD";
   const liveRate = useMemo(() => {
     if (!ratesQuery.data) return null;
     if (currency === "EUR") return ratesQuery.data.audEur;
     if (currency === "USD") return ratesQuery.data.audUsd;
+    if (currency === "NZD") return ratesQuery.data.audNzd;
     return 1;
   }, [ratesQuery.data, currency]);
 
@@ -281,7 +282,7 @@ export default function NewQuote() {
       if (res.supplierDefaults) {
         const sd = res.supplierDefaults;
         setMarginPct(String(sd.marginPct));
-        setCurrency(sd.currency as "EUR" | "USD" | "AUD");
+        setCurrency(sd.currency as "EUR" | "USD" | "AUD" | "NZD");
         if (sd.discountPct > 0 && !ex.distribution_discount_pct) {
           setDistributionDiscountPct(String(sd.discountPct));
         }
@@ -295,7 +296,7 @@ export default function NewQuote() {
       }
       setSupplierQuoteRef(ex.supplier_quote_number ?? "");
       // Currency from extraction overrides reference if present
-      if (ex.currency) setCurrency(ex.currency as "EUR" | "USD" | "AUD");
+      if (ex.currency) setCurrency(ex.currency as "EUR" | "USD" | "AUD" | "NZD");
       setCustomerName(ex.customer_name ?? "");
       setCustomerContact(ex.customer_contact ?? "");
       setCustomerAddress(ex.customer_address ?? "");
@@ -337,7 +338,7 @@ export default function NewQuote() {
     try {
       await confirmRate.mutateAsync({
         quoteId,
-        pair: pair as "AUD/EUR" | "AUD/USD" | "AUD/AUD",
+        pair: pair as "AUD/EUR" | "AUD/USD" | "AUD/AUD" | "AUD/NZD",
         rate,
         source: rateOverride
           ? "Manual override by user"
@@ -597,7 +598,7 @@ export default function NewQuote() {
                 <div className="space-y-1.5">
                   <Label>Currency</Label>
                   <div className="flex gap-2">
-                    {(["EUR", "USD", "AUD"] as const).map(c => (
+                    {(["EUR", "USD", "AUD", "NZD"] as const).map(c => (
                       <Button
                         key={c}
                         type="button"

@@ -124,7 +124,7 @@ export interface CostingInput {
   marginPct: number;
   /** Exchange rate expressed as AUD→foreign (e.g. AUD/EUR = 0.61 → 1 AUD buys 0.61 EUR). */
   exchangeRate: number;
-  currency: "EUR" | "USD" | "AUD";
+  currency: "EUR" | "USD" | "AUD" | "NZD";
   /** Optional currency exchange markdown % (e.g. 2%). */
   currencyMarkdownPct?: number;
   freightCostAud?: number;
@@ -155,7 +155,7 @@ export interface CostingResult {
   otherLocalCostAud: number;
   /** Grand total in AUD excl. GST (equipment + local costs). */
   grandTotalAud: number;
-  currency: "EUR" | "USD" | "AUD";
+  currency: "EUR" | "USD" | "AUD" | "NZD";
   exchangeRate: number;
   marginPct: number;
 }

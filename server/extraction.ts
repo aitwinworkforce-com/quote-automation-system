@@ -17,7 +17,7 @@ export interface ExtractedQuoteData {
   supplier_name: string;
   supplier_quote_number: string;
   quote_date: string;
-  currency: "EUR" | "USD" | "AUD";
+  currency: "EUR" | "USD" | "AUD" | "NZD";
   customer_name: string;
   customer_contact: string;
   customer_address: string;
@@ -44,7 +44,7 @@ const EXTRACTION_SCHEMA = {
     },
     supplier_quote_number: { type: "string", description: "The supplier's quotation/reference number, from the header or document body." },
     quote_date: { type: "string", description: "Quote date in DD/MM/YYYY format if available, else empty string." },
-    currency: { type: "string", enum: ["EUR", "USD", "AUD"], description: "Currency the prices are quoted in." },
+    currency: { type: "string", enum: ["EUR", "USD", "AUD", "NZD"], description: "Currency the prices are quoted in." },
     customer_name: { type: "string", description: "End customer / addressee company name if shown, else empty string." },
     customer_contact: { type: "string", description: "Contact person name if shown, else empty string." },
     customer_address: { type: "string", description: "Customer address if shown, else empty string." },
