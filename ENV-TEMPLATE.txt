@@ -1,0 +1,24 @@
+# ============================================================
+# Oestergaard AI Quote Agent — Environment Variables for Railway
+# Set these in Railway dashboard → Variables
+# ============================================================
+
+# --- Database (MySQL) ---
+# Railway MySQL plugin provides DATABASE_URL automatically
+
+# --- Authentication ---
+JWT_SECRET=<random-64-char-string>
+
+# --- AI / LLM (OpenAI-compatible) ---
+BUILT_IN_FORGE_API_URL=https://api.openai.com
+BUILT_IN_FORGE_API_KEY=sk-your-openai-api-key
+
+# --- File Storage (S3-compatible) ---
+S3_BUCKET=your-bucket-name
+S3_REGION=ap-southeast-2
+S3_ACCESS_KEY=your-aws-access-key
+S3_SECRET_KEY=your-aws-secret-key
+# S3_ENDPOINT= (optional, for R2/MinIO)
+
+# --- App Config ---
+NODE_ENV=production

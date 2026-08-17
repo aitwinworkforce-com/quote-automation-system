@@ -105,6 +105,31 @@ export async function getUserByOpenId(openId: string) {
 // Suppliers
 // ---------------------------------------------------------------------------
 
+export async function getUserByEmail(email: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function listUsers() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(users);
+}
+
+export async function updateUserPasswordHash(userId: number, passwordHash: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({ passwordHash } as any).where(eq(users.id, userId));
+}
+
+export async function updateUserRole(userId: number, role: "admin" | "user") {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(users).set({ role }).where(eq(users.id, userId));
+}
+
 export async function listSuppliers() {
   const db = await getDb();
   if (!db) return [];

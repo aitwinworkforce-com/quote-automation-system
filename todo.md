@@ -111,3 +111,9 @@
 - [x] Redesign Audit Agent page to be more dynamic — collapsible grouped sections, compact KPIs, expand-on-click items, animated scan
 - [x] Add draft DOCX preview generation after costing (no SF number required)
 - [x] Auto-advance workflow: skip image preview if no image found, streamline FX step
+- [ ] Add standalone auth (email/password) as Railway alternative to Manus OAuth
+- [x] Add standalone auth (email/password) as Railway alternative to Manus OAuth
+- [x] Abstract LLM calls to support both Manus Forge and OpenAI directly
+- [x] Abstract S3 storage to support both Manus S3 and standard AWS SDK
+- [x] Add Railway deployment config (env template, build script, README)
+- [ ] Push Railway-ready code to GitHub
