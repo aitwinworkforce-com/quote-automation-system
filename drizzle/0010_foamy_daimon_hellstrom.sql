@@ -1,0 +1,1 @@
+ALTER TABLE `quotes` MODIFY COLUMN `supplierCurrency` enum('EUR','USD','AUD','NZD','GBP') DEFAULT 'EUR';

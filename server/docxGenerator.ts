@@ -77,7 +77,7 @@ function money(n: number | string | null | undefined, symbol: string): string {
 }
 
 function currencySymbol(c: string | null | undefined): string {
-  return c === "USD" ? "US$" : c === "AUD" ? "$" : c === "NZD" ? "NZ$" : "€";
+  return c === "USD" ? "US$" : c === "AUD" ? "$" : c === "NZD" ? "NZ$" : c === "GBP" ? "£" : "€";
 }
 
 function noBorder() {
@@ -487,7 +487,7 @@ function buildPricingPage(quote: Quote, lineItems: QuoteLineItem[]): Paragraph[]
 
   // Payment notes (bullets)
   paragraphs.push(new Paragraph({ spacing: { before: 300 } }));
-  const currencyLabel = quote.supplierCurrency === "USD" ? "US Dollar" : quote.supplierCurrency === "AUD" ? "Australian Dollar" : quote.supplierCurrency === "NZD" ? "New Zealand Dollar" : "Euro";
+  const currencyLabel = quote.supplierCurrency === "USD" ? "US Dollar" : quote.supplierCurrency === "AUD" ? "Australian Dollar" : quote.supplierCurrency === "NZD" ? "New Zealand Dollar" : quote.supplierCurrency === "GBP" ? "British Pound" : "Euro";
   const notes = [
     TEMPLATE_PRICE_NOTES[0].replace("Euro currency", `${currencyLabel} currency`),
     TEMPLATE_PRICE_NOTES[1],

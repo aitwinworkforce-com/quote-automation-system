@@ -104,3 +104,6 @@
 
 ## Currency Support
 - [x] Add NZD (New Zealand Dollar) as supported currency for exchange rates
+- [x] Add GBP (British Pound) as supported currency for exchange rates
+- [x] Test full guided workflow with real supplier PDF upload end-to-end
+- [x] Verify accuracy score improves at each wizard step (enhanced badge with checks count)

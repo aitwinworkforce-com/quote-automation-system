@@ -93,12 +93,18 @@ function StepAccuracyBadge({ step, data }: {
     : score >= 70 ? "text-amber-600 bg-amber-50 border-amber-200"
     : "text-red-600 bg-red-50 border-red-200";
 
+  const passedCount = relevantChecks.filter(c => c.passed).length;
+  const totalCount = relevantChecks.length;
+
   return (
-    <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${color}`}>
-      <svg className="h-3 w-3" viewBox="0 0 16 16" fill="currentColor">
-        <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zm3.78 5.22a.75.75 0 0 0-1.06 0L7 8.94 5.28 7.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.06 0l4.25-4.25a.75.75 0 0 0 0-1.06z"/>
-      </svg>
-      Accuracy: {score}%
+    <div className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold ${color}`}>
+      <div className="flex items-center gap-1.5">
+        <svg className="h-4 w-4" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zm3.78 5.22a.75.75 0 0 0-1.06 0L7 8.94 5.28 7.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.06 0l4.25-4.25a.75.75 0 0 0 0-1.06z"/>
+        </svg>
+        <span>Accuracy: {score}%</span>
+      </div>
+      <span className="text-xs opacity-75">({passedCount}/{totalCount} checks passed)</span>
     </div>
   );
 }
@@ -169,7 +175,7 @@ export default function NewQuote() {
   // Step 2 — extraction review
   const [supplierName, setSupplierName] = useState("");
   const [supplierQuoteRef, setSupplierQuoteRef] = useState("");
-  const [currency, setCurrency] = useState<"EUR" | "USD" | "AUD" | "NZD">("EUR");
+  const [currency, setCurrency] = useState<"EUR" | "USD" | "AUD" | "NZD" | "GBP">("EUR");
   const [customerName, setCustomerName] = useState("");
   const [customerContact, setCustomerContact] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
@@ -212,12 +218,13 @@ export default function NewQuote() {
   const generateDocx = trpc.pdf.generateQuoteDocx.useMutation();
   const utils = trpc.useUtils();
 
-  const pair = currency === "EUR" ? "AUD/EUR" : currency === "USD" ? "AUD/USD" : currency === "NZD" ? "AUD/NZD" : "AUD/AUD";
+  const pair = currency === "EUR" ? "AUD/EUR" : currency === "USD" ? "AUD/USD" : currency === "NZD" ? "AUD/NZD" : currency === "GBP" ? "AUD/GBP" : "AUD/AUD";
   const liveRate = useMemo(() => {
     if (!ratesQuery.data) return null;
     if (currency === "EUR") return ratesQuery.data.audEur;
     if (currency === "USD") return ratesQuery.data.audUsd;
     if (currency === "NZD") return ratesQuery.data.audNzd;
+    if (currency === "GBP") return ratesQuery.data.audGbp;
     return 1;
   }, [ratesQuery.data, currency]);
 
@@ -282,7 +289,7 @@ export default function NewQuote() {
       if (res.supplierDefaults) {
         const sd = res.supplierDefaults;
         setMarginPct(String(sd.marginPct));
-        setCurrency(sd.currency as "EUR" | "USD" | "AUD" | "NZD");
+        setCurrency(sd.currency as "EUR" | "USD" | "AUD" | "NZD" | "GBP");
         if (sd.discountPct > 0 && !ex.distribution_discount_pct) {
           setDistributionDiscountPct(String(sd.discountPct));
         }
@@ -296,7 +303,7 @@ export default function NewQuote() {
       }
       setSupplierQuoteRef(ex.supplier_quote_number ?? "");
       // Currency from extraction overrides reference if present
-      if (ex.currency) setCurrency(ex.currency as "EUR" | "USD" | "AUD" | "NZD");
+      if (ex.currency) setCurrency(ex.currency as "EUR" | "USD" | "AUD" | "NZD" | "GBP");
       setCustomerName(ex.customer_name ?? "");
       setCustomerContact(ex.customer_contact ?? "");
       setCustomerAddress(ex.customer_address ?? "");
@@ -338,7 +345,7 @@ export default function NewQuote() {
     try {
       await confirmRate.mutateAsync({
         quoteId,
-        pair: pair as "AUD/EUR" | "AUD/USD" | "AUD/AUD" | "AUD/NZD",
+        pair: pair as "AUD/EUR" | "AUD/USD" | "AUD/AUD" | "AUD/NZD" | "AUD/GBP",
         rate,
         source: rateOverride
           ? "Manual override by user"
@@ -598,7 +605,7 @@ export default function NewQuote() {
                 <div className="space-y-1.5">
                   <Label>Currency</Label>
                   <div className="flex gap-2">
-                    {(["EUR", "USD", "AUD", "NZD"] as const).map(c => (
+                    {(["EUR", "USD", "AUD", "NZD", "GBP"] as const).map(c => (
                       <Button
                         key={c}
                         type="button"

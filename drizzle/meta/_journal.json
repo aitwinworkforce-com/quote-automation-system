@@ -71,6 +71,13 @@
       "when": 1786939330655,
       "tag": "0009_fluffy_ironclad",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1786939662881,
+      "tag": "0010_foamy_daimon_hellstrom",
+      "breakpoints": true
     }
   ]
 }

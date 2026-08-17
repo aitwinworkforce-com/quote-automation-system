@@ -155,7 +155,7 @@ export const quotesRouter = router({
     .input(
       z.object({
         quoteId: z.number(),
-        pair: z.enum(["AUD/EUR", "AUD/USD", "AUD/AUD", "AUD/NZD"]),
+        pair: z.enum(["AUD/EUR", "AUD/USD", "AUD/AUD", "AUD/NZD", "AUD/GBP"]),
         rate: z.number().positive(),
         source: z.string(),
       }),
@@ -220,7 +220,7 @@ export const quotesRouter = router({
         footerIndicatesNet: input.footerIndicatesNet,
         marginPct: input.marginPct,
         exchangeRate: Number(quote.exchangeRate),
-        currency: (quote.supplierCurrency as "EUR" | "USD" | "AUD" | "NZD") ?? "EUR",
+        currency: (quote.supplierCurrency as "EUR" | "USD" | "AUD" | "NZD" | "GBP") ?? "EUR",
         currencyMarkdownPct: 2,
         freightCostAud: input.freightCostAud,
         installationCostAud: input.installationCostAud,

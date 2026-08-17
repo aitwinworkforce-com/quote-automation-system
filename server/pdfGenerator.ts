@@ -40,7 +40,7 @@ function money(n: number | string | null | undefined, symbol: string): string {
 }
 
 function currencySymbol(c: string | null | undefined): string {
-  return c === "USD" ? "US$" : c === "AUD" ? "$" : c === "NZD" ? "NZ$" : "€";
+  return c === "USD" ? "US$" : c === "AUD" ? "$" : c === "NZD" ? "NZ$" : c === "GBP" ? "£" : "€";
 }
 
 /** Draw the OESTERGAARD wordmark header used on every page. */
@@ -345,7 +345,7 @@ export async function generateQuotePdf(quote: Quote, lineItems: QuoteLineItem[])
     doc.y = ty;
     doc.font("Helvetica").fontSize(9.5).fillColor(DARK);
     const bullets = [
-      TEMPLATE_PRICE_NOTES[0].replace("Euro currency", `${quote.supplierCurrency === "USD" ? "US Dollar" : quote.supplierCurrency === "AUD" ? "Australian Dollar" : quote.supplierCurrency === "NZD" ? "New Zealand Dollar" : "Euro"} currency`),
+      TEMPLATE_PRICE_NOTES[0].replace("Euro currency", `${quote.supplierCurrency === "USD" ? "US Dollar" : quote.supplierCurrency === "AUD" ? "Australian Dollar" : quote.supplierCurrency === "NZD" ? "New Zealand Dollar" : quote.supplierCurrency === "GBP" ? "British Pound" : "Euro"} currency`),
       TEMPLATE_PRICE_NOTES[1],
       TEMPLATE_PRICE_NOTES[2],
     ];
